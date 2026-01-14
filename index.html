@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Structures Playground</title>
+    <title>DS Playground | BST Search</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -12,110 +12,149 @@
     <style>
         body { font-family: 'Merriweather', serif; background-color: #F9F9F6; color: #2D3748; }
         .mono { font-family: 'Fira Code', monospace; }
-        .node-transition { transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-        .canvas-grid { background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
+        .canvas-grid { background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 30px 30px; }
+        .node-circle { transition: all 0.3s ease; }
+        .tree-line { stroke: #cbd5e1; stroke-width: 2; transition: all 0.3s; }
+        .highlight-node { fill: #319795 !important; stroke: #2c7a7b !important; }
+        .found-node { fill: #ecc94b !important; stroke: #d69e2e !important; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect } = React;
 
-        const Node = ({ value, label, type, isNew }) => (
-            <div className={`node-transition flex items-center justify-center border-2 border-slate-800 rounded-lg bg-white mono text-xl shadow-sm relative
-                ${type === 'linkedlist' ? 'w-24 h-14' : 'w-16 h-16'}
-                ${isNew ? 'scale-110 border-teal-500 shadow-md' : 'scale-100'}
-            `}>
-                {type === 'linkedlist' ? (
-                    <div className="flex w-full h-full">
-                        <div className="flex-1 flex items-center justify-center border-r-2 border-slate-800">{value}</div>
-                        <div className="w-6 bg-slate-50 text-[8px] flex items-center justify-center text-slate-400">NEXT</div>
-                    </div>
-                ) : value}
-                {label && <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] font-bold text-teal-600 tracking-widest">{label}</div>}
-            </div>
-        );
+        const TreeNode = ({ node, x, y, spacing, activeId, foundId }) => {
+            if (!node) return null;
+            const isActive = activeId === node.id;
+            const isFound = foundId === node.id;
+
+            return (
+                <g>
+                    {node.left && <line className="tree-line" x1={x} y1={y} x2={x - spacing} y2={y + 80} />}
+                    {node.right && <line className="tree-line" x1={x} y1={y} x2={x + spacing} y2={y + 80} />}
+                    
+                    <circle cx={x} cy={y} r="22" fill="white" stroke="#1e293b" strokeWidth="2" 
+                        className={`node-circle ${isActive ? 'highlight-node' : ''} ${isFound ? 'found-node' : ''}`} 
+                    />
+                    <text x={x} y={y + 5} textAnchor="middle" className="mono text-sm font-bold" fill={isActive || isFound ? "white" : "#1e293b"}>
+                        {node.val}
+                    </text>
+                    
+                    <TreeNode node={node.left} x={x - spacing} y={y + 80} spacing={spacing / 1.8} activeId={activeId} foundId={foundId} />
+                    <TreeNode node={node.right} x={x + spacing} y={y + 80} spacing={spacing / 1.8} activeId={activeId} foundId={foundId} />
+                </g>
+            );
+        };
 
         function App() {
-            const [tab, setTab] = useState('stack');
+            const [tab, setTab] = useState('tree');
             const [data, setData] = useState([]);
+            const [tree, setTree] = useState(null);
             const [input, setInput] = useState('');
-            const [lastId, setLastId] = useState(null);
+            const [activeNodeId, setActiveNodeId] = useState(null);
+            const [foundNodeId, setFoundNodeId] = useState(null);
+            const [isSearching, setIsSearching] = useState(false);
 
-            const handleAdd = () => {
-                if (!input) return;
-                const newItem = { id: Math.random(), val: input };
-                setLastId(newItem.id);
-                if (tab === 'stack') setData([newItem, ...data]);
-                else setData([...data, newItem]);
-                setInput('');
-                setTimeout(() => setLastId(null), 500);
+            const insertBST = (root, val) => {
+                const id = Math.random();
+                if (!root) return { id, val, left: null, right: null };
+                if (val < root.val) root.left = insertBST(root.left, val);
+                else root.right = insertBST(root.right, val);
+                return { ...root };
             };
 
-            const handleRemove = () => {
-                if (data.length === 0) return;
-                setData(data.slice(1));
+            const handleAdd = () => {
+                const val = parseInt(input);
+                if (isNaN(val)) return;
+                setFoundNodeId(null);
+                if (tab === 'tree') setTree(insertBST(tree, val));
+                else if (tab === 'stack') setData([{ id: Math.random(), val }, ...data]);
+                else setData([...data, { id: Math.random(), val }]);
+                setInput('');
+            };
+
+            const handleSearch = async () => {
+                const target = parseInt(input);
+                if (isNaN(target) || !tree || isSearching) return;
+                
+                setIsSearching(true);
+                setFoundNodeId(null);
+                let current = tree;
+                
+                while (current) {
+                    setActiveNodeId(current.id);
+                    await new Promise(r => setTimeout(r, 600)); // Delay for visualization
+                    
+                    if (current.val === target) {
+                        setFoundNodeId(current.id);
+                        break;
+                    }
+                    current = target < current.val ? current.left : current.right;
+                }
+                
+                setActiveNodeId(null);
+                setIsSearching(false);
+                setInput('');
             };
 
             return (
-                <div className="min-h-screen flex flex-col">
+                <div className="min-h-screen flex flex-col bg-[#F9F9F6]">
                     <header className="p-6 border-b border-slate-200 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div>
-                            <h1 className="text-xl font-bold">Data Structures Playground</h1>
-                            <p className="text-xs text-slate-400 italic">Conceptual clarity through visualization</p>
+                        <div className="text-center md:text-left">
+                            <h1 className="text-xl font-bold">DS Playground</h1>
+                            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Search Visualization Active</p>
                         </div>
                         <div className="flex bg-slate-100 rounded-lg p-1 border border-slate-200">
-                            {['stack', 'queue', 'linkedlist'].map(t => (
-                                <button 
-                                    key={t}
-                                    onClick={() => { setTab(t); setData([]); }}
-                                    className={`px-6 py-1.5 rounded-md text-sm capitalize transition-all ${tab === t ? 'bg-white shadow-sm text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-700'}`}
-                                >
-                                    {t}
+                            {['stack', 'queue', 'tree'].map(t => (
+                                <button key={t} onClick={() => { setTab(t); setData([]); setTree(null); setFoundNodeId(null); }}
+                                    className={`px-6 py-1.5 rounded-md text-sm capitalize transition-all ${tab === t ? 'bg-white shadow-sm text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-800'}`}>
+                                    {t === 'tree' ? 'BST' : t}
                                 </button>
                             ))}
                         </div>
                     </header>
 
-                    <main className="flex-1 canvas-grid flex items-center justify-center overflow-hidden p-10">
-                        <div className={`flex gap-6 items-center transition-all duration-500 ${tab === 'stack' ? 'flex-col-reverse' : 'flex-row'}`}>
-                            {data.map((item, i) => (
-                                <React.Fragment key={item.id}>
-                                    <Node 
-                                        value={item.val} 
-                                        type={tab}
-                                        isNew={item.id === lastId}
-                                        label={i === 0 ? (tab === 'stack' ? 'TOP' : 'HEAD') : (i === data.length - 1 && tab !== 'stack' ? 'TAIL' : null)} 
-                                    />
-                                    {tab !== 'stack' && i < data.length - 1 && (
-                                        <div className="text-slate-400 font-bold animate-pulse">──→</div>
-                                    )}
-                                </React.Fragment>
-                            ))}
-                            {data.length === 0 && (
-                                <div className="text-slate-300 italic flex flex-col items-center gap-2">
-                                    <div className="w-16 h-16 border-2 border-dashed border-slate-200 rounded-lg"></div>
-                                    <p className="text-sm">Empty Structure</p>
-                                </div>
-                            )}
-                        </div>
+                    <main className="flex-1 canvas-grid relative overflow-auto flex items-center justify-center p-4">
+                        {tab === 'tree' ? (
+                            <svg width="100%" height="100%" viewBox="0 0 800 500" className="max-w-4xl drop-shadow-sm">
+                                <TreeNode node={tree} x={400} y={60} spacing={180} activeId={activeNodeId} foundId={foundNodeId} />
+                                {!tree && <text x="400" y="250" textAnchor="middle" fill="#cbd5e1" className="italic font-serif">Empty Tree - Insert values to start</text>}
+                            </svg>
+                        ) : (
+                            <div className={`flex gap-6 items-center ${tab === 'stack' ? 'flex-col-reverse' : 'flex-row'}`}>
+                                {data.map((item, i) => (
+                                    <div key={item.id} className="flex items-center gap-6 animate-in fade-in zoom-in duration-300">
+                                        <div className="w-16 h-16 border-2 border-slate-800 rounded-lg bg-white mono flex items-center justify-center relative shadow-sm hover:border-teal-500 transition-colors">
+                                            {item.val}
+                                            {i === 0 && <div className="absolute -top-8 text-[10px] font-bold text-teal-600 tracking-tighter uppercase">{tab === 'stack' ? 'Top' : 'Front'}</div>}
+                                        </div>
+                                        {tab === 'queue' && i < data.length - 1 && <div className="text-slate-300 font-bold">──→</div>}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </main>
 
-                    <footer className="p-8 border-t border-slate-200 bg-white flex flex-wrap justify-center gap-4 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
-                        <input 
-                            type="text" 
-                            value={input}
-                            onChange={e => setInput(e.target.value)}
+                    <footer className="p-8 border-t border-slate-200 bg-white flex flex-wrap justify-center gap-4">
+                        <input type="number" value={input} onChange={e => setInput(e.target.value)} 
                             onKeyDown={e => e.key === 'Enter' && handleAdd()}
-                            placeholder="Val"
-                            className="border-2 border-slate-200 rounded-lg px-4 py-2 w-24 outline-none focus:border-slate-800 mono text-center transition-colors"
-                        />
-                        <button onClick={handleAdd} className="bg-slate-800 text-white px-8 py-2 rounded-lg font-bold hover:bg-slate-700 active:scale-95 transition-all flex items-center gap-2">
-                            <span>+</span> {tab === 'stack' ? 'Push' : 'Enqueue'}
+                            placeholder="Val" className="border-2 border-slate-200 rounded-lg px-4 py-2 w-24 outline-none focus:border-slate-800 mono text-center" />
+                        
+                        <button disabled={isSearching} onClick={handleAdd} className="bg-slate-800 text-white px-8 py-2 rounded-lg font-bold hover:bg-slate-700 disabled:opacity-50 transition-all shadow-md">
+                            {tab === 'tree' ? 'Insert' : tab === 'stack' ? 'Push' : 'Enqueue'}
                         </button>
-                        <button onClick={handleRemove} className="border-2 border-slate-800 text-slate-800 px-8 py-2 rounded-lg font-bold hover:bg-slate-50 active:scale-95 transition-all flex items-center gap-2">
-                            <span>−</span> {tab === 'stack' ? 'Pop' : 'Dequeue'}
+                        
+                        {tab === 'tree' && (
+                            <button disabled={isSearching} onClick={handleSearch} className="bg-teal-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-teal-700 disabled:opacity-50 transition-all shadow-md">
+                                Search
+                            </button>
+                        )}
+                        
+                        <button disabled={isSearching} onClick={() => { setData(data.slice(1)); setTree(null); setFoundNodeId(null); }} 
+                                className="border-2 border-slate-800 text-slate-800 px-8 py-2 rounded-lg font-bold hover:bg-slate-50 disabled:opacity-50 transition-all">
+                            {tab === 'tree' ? 'Clear' : 'Remove'}
                         </button>
                     </footer>
                 </div>
