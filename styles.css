@@ -17,9 +17,7 @@ body {
   margin: 0;
   font-family: "Manrope", "Segoe UI", sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(circle at 15% 5%, rgba(15, 118, 110, 0.14), transparent 32%),
-    var(--bg);
+  background: var(--bg);
 }
 
 .container {
@@ -185,10 +183,7 @@ button:hover {
   min-height: 430px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background:
-    linear-gradient(to right, rgba(148, 163, 184, 0.08) 1px, transparent 1px) 0 0 / 30px 30px,
-    linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px) 0 0 / 30px 30px,
-    #fbfdff;
+  background: #fbfdff;
   padding: 0.9rem;
 }
 
