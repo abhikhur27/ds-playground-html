@@ -3,10 +3,12 @@ const valueInput = document.getElementById('value-input');
 const addBtn = document.getElementById('add-btn');
 const removeBtn = document.getElementById('remove-btn');
 const searchBtn = document.getElementById('search-btn');
+const traverseBtn = document.getElementById('traverse-btn');
 const clearBtn = document.getElementById('clear-btn');
 const undoBtn = document.getElementById('undo-btn');
 const exportLogBtn = document.getElementById('export-log-btn');
 const statusEl = document.getElementById('status');
+const traversalOutputEl = document.getElementById('traversal-output');
 const logEl = document.getElementById('log');
 const structureTitle = document.getElementById('structure-title');
 const structureNote = document.getElementById('structure-note');
@@ -46,6 +48,8 @@ const state = {
 let nodeCounter = 0;
 let searchInProgress = false;
 const historyStack = [];
+let traversalModeIndex = 0;
+const traversalModes = ['In-order', 'Pre-order', 'Post-order', 'Level-order'];
 
 function nextNodeId() {
   nodeCounter += 1;
@@ -54,6 +58,10 @@ function nextNodeId() {
 
 function setStatus(message) {
   statusEl.textContent = message;
+}
+
+function setTraversalOutput(message) {
+  traversalOutputEl.textContent = message || '';
 }
 
 function addLog(message) {
@@ -284,6 +292,10 @@ function updateControlLabels() {
 
   const isBST = state.active === 'bst';
   searchBtn.classList.toggle('hidden', !isBST);
+  traverseBtn.classList.toggle('hidden', !isBST);
+  if (!isBST) {
+    setTraversalOutput('');
+  }
 }
 
 async function animateSearch(path, foundId) {
@@ -308,6 +320,80 @@ function clearHighlights() {
   state.foundNodeId = null;
 }
 
+function inorder(node, output) {
+  if (!node) return;
+  inorder(node.left, output);
+  output.push(node.value);
+  inorder(node.right, output);
+}
+
+function preorder(node, output) {
+  if (!node) return;
+  output.push(node.value);
+  preorder(node.left, output);
+  preorder(node.right, output);
+}
+
+function postorder(node, output) {
+  if (!node) return;
+  postorder(node.left, output);
+  postorder(node.right, output);
+  output.push(node.value);
+}
+
+function levelorder(root) {
+  if (!root) return [];
+  const queue = [root];
+  const output = [];
+
+  while (queue.length) {
+    const node = queue.shift();
+    output.push(node.value);
+    if (node.left) queue.push(node.left);
+    if (node.right) queue.push(node.right);
+  }
+
+  return output;
+}
+
+function computeTraversal(modeName) {
+  const output = [];
+
+  if (modeName === 'In-order') {
+    inorder(state.bst, output);
+    return output;
+  }
+
+  if (modeName === 'Pre-order') {
+    preorder(state.bst, output);
+    return output;
+  }
+
+  if (modeName === 'Post-order') {
+    postorder(state.bst, output);
+    return output;
+  }
+
+  return levelorder(state.bst);
+}
+
+function handleTraverse() {
+  if (state.active !== 'bst') return;
+
+  if (!state.bst) {
+    setStatus('BST is empty. Insert nodes first.');
+    setTraversalOutput('');
+    return;
+  }
+
+  const mode = traversalModes[traversalModeIndex];
+  const sequence = computeTraversal(mode);
+  setTraversalOutput(`${mode}: ${sequence.join(' -> ')}`);
+  setStatus(`Traversal computed (${mode}).`);
+  addLog(`BST traversal ${mode.toLowerCase()}`);
+  traversalModeIndex = (traversalModeIndex + 1) % traversalModes.length;
+}
+
 function handleAdd() {
   const value = parseInputValue();
   if (value === null) {
@@ -329,6 +415,7 @@ function handleAdd() {
   } else {
     const result = insertBST(state.bst, value);
     state.bst = result.node;
+    setTraversalOutput('');
     if (result.inserted) {
       setStatus(`Inserted ${value} into BST.`);
       addLog(`BST insert ${value}`);
@@ -373,6 +460,7 @@ function handleRemove() {
 
     const result = deleteBST(state.bst, value);
     state.bst = result.node;
+    setTraversalOutput('');
 
     if (result.deleted) {
       setStatus(`Deleted ${value} from BST.`);
@@ -427,6 +515,7 @@ function handleClear() {
     addLog('Queue cleared');
   } else {
     state.bst = null;
+    setTraversalOutput('');
     setStatus('BST cleared.');
     addLog('BST cleared');
   }
@@ -444,6 +533,7 @@ function handleUndo() {
   const snapshot = historyStack.pop();
   applySnapshot(snapshot);
   clearHighlights();
+  setTraversalOutput('');
   renderVisualization();
   setStatus('Undid last structural change.');
   addLog('Undo applied');
@@ -467,6 +557,7 @@ function exportLog() {
 
 function setActiveTab(tab) {
   state.active = tab;
+  traversalModeIndex = 0;
   updateControlLabels();
   clearHighlights();
   renderVisualization();
@@ -487,6 +578,7 @@ tabs.forEach((button) => {
 addBtn.addEventListener('click', handleAdd);
 removeBtn.addEventListener('click', handleRemove);
 searchBtn.addEventListener('click', handleSearch);
+traverseBtn.addEventListener('click', handleTraverse);
 clearBtn.addEventListener('click', handleClear);
 undoBtn.addEventListener('click', handleUndo);
 exportLogBtn.addEventListener('click', exportLog);
