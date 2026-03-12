@@ -4,6 +4,8 @@ const addBtn = document.getElementById('add-btn');
 const removeBtn = document.getElementById('remove-btn');
 const searchBtn = document.getElementById('search-btn');
 const clearBtn = document.getElementById('clear-btn');
+const undoBtn = document.getElementById('undo-btn');
+const exportLogBtn = document.getElementById('export-log-btn');
 const statusEl = document.getElementById('status');
 const logEl = document.getElementById('log');
 const structureTitle = document.getElementById('structure-title');
@@ -43,6 +45,7 @@ const state = {
 
 let nodeCounter = 0;
 let searchInProgress = false;
+const historyStack = [];
 
 function nextNodeId() {
   nodeCounter += 1;
@@ -57,6 +60,37 @@ function addLog(message) {
   state.logs.unshift(`${new Date().toLocaleTimeString()} - ${message}`);
   state.logs = state.logs.slice(0, 16);
 
+  logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
+}
+
+function cloneTree(node) {
+  if (!node) return null;
+  return {
+    id: node.id,
+    value: node.value,
+    left: cloneTree(node.left),
+    right: cloneTree(node.right),
+  };
+}
+
+function captureSnapshot() {
+  historyStack.push({
+    stack: [...state.stack],
+    queue: [...state.queue],
+    bst: cloneTree(state.bst),
+    logs: [...state.logs],
+  });
+
+  if (historyStack.length > 80) {
+    historyStack.shift();
+  }
+}
+
+function applySnapshot(snapshot) {
+  state.stack = [...snapshot.stack];
+  state.queue = [...snapshot.queue];
+  state.bst = cloneTree(snapshot.bst);
+  state.logs = [...snapshot.logs];
   logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
 }
 
@@ -282,6 +316,7 @@ function handleAdd() {
   }
 
   clearHighlights();
+  captureSnapshot();
 
   if (state.active === 'stack') {
     state.stack.push(value);
@@ -309,6 +344,8 @@ function handleAdd() {
 }
 
 function handleRemove() {
+  captureSnapshot();
+
   if (state.active === 'stack') {
     if (!state.stack.length) {
       setStatus('Stack is empty.');
@@ -378,6 +415,8 @@ async function handleSearch() {
 }
 
 function handleClear() {
+  captureSnapshot();
+
   if (state.active === 'stack') {
     state.stack = [];
     setStatus('Stack cleared.');
@@ -394,6 +433,36 @@ function handleClear() {
 
   clearHighlights();
   renderVisualization();
+}
+
+function handleUndo() {
+  if (!historyStack.length) {
+    setStatus('Nothing to undo yet.');
+    return;
+  }
+
+  const snapshot = historyStack.pop();
+  applySnapshot(snapshot);
+  clearHighlights();
+  renderVisualization();
+  setStatus('Undid last structural change.');
+  addLog('Undo applied');
+}
+
+function exportLog() {
+  if (!state.logs.length) {
+    setStatus('Log is empty. Run some operations first.');
+    return;
+  }
+
+  const content = state.logs.slice().reverse().join('\\n');
+  const blob = new Blob([content], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `ds-playground-log-${new Date().toISOString().slice(0, 10)}.txt`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function setActiveTab(tab) {
@@ -419,6 +488,8 @@ addBtn.addEventListener('click', handleAdd);
 removeBtn.addEventListener('click', handleRemove);
 searchBtn.addEventListener('click', handleSearch);
 clearBtn.addEventListener('click', handleClear);
+undoBtn.addEventListener('click', handleUndo);
+exportLogBtn.addEventListener('click', exportLog);
 
 valueInput.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
