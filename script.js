@@ -10,6 +10,8 @@ const exportLogBtn = document.getElementById('export-log-btn');
 const sampleBtn = document.getElementById('sample-btn');
 const statusEl = document.getElementById('status');
 const traversalOutputEl = document.getElementById('traversal-output');
+const metricSizeEl = document.getElementById('metric-size');
+const metricHeightEl = document.getElementById('metric-height');
 const logEl = document.getElementById('log');
 const structureTitle = document.getElementById('structure-title');
 const structureNote = document.getElementById('structure-note');
@@ -109,6 +111,36 @@ function parseInputValue() {
     return null;
   }
   return parsed;
+}
+
+function bstHeight(node) {
+  if (!node) return 0;
+  return 1 + Math.max(bstHeight(node.left), bstHeight(node.right));
+}
+
+function updateMetrics() {
+  if (state.active === 'stack') {
+    metricSizeEl.textContent = String(state.stack.length);
+    metricHeightEl.textContent = '-';
+    return;
+  }
+
+  if (state.active === 'queue') {
+    metricSizeEl.textContent = String(state.queue.length);
+    metricHeightEl.textContent = '-';
+    return;
+  }
+
+  let count = 0;
+  (function walk(node) {
+    if (!node) return;
+    count += 1;
+    walk(node.left);
+    walk(node.right);
+  })(state.bst);
+
+  metricSizeEl.textContent = String(count);
+  metricHeightEl.textContent = String(bstHeight(state.bst));
 }
 
 function insertBST(node, value) {
@@ -273,15 +305,18 @@ function renderBST() {
 function renderVisualization() {
   if (state.active === 'stack') {
     renderStack();
+    updateMetrics();
     return;
   }
 
   if (state.active === 'queue') {
     renderQueue();
+    updateMetrics();
     return;
   }
 
   renderBST();
+  updateMetrics();
 }
 
 function updateControlLabels() {
