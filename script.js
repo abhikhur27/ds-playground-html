@@ -7,6 +7,7 @@ const traverseBtn = document.getElementById('traverse-btn');
 const clearBtn = document.getElementById('clear-btn');
 const undoBtn = document.getElementById('undo-btn');
 const exportLogBtn = document.getElementById('export-log-btn');
+const sampleBtn = document.getElementById('sample-btn');
 const statusEl = document.getElementById('status');
 const traversalOutputEl = document.getElementById('traversal-output');
 const logEl = document.getElementById('log');
@@ -524,6 +525,34 @@ function handleClear() {
   renderVisualization();
 }
 
+function handleSampleLoad() {
+  captureSnapshot();
+  clearHighlights();
+  setTraversalOutput('');
+  traversalModeIndex = 0;
+
+  if (state.active === 'stack') {
+    state.stack = [14, 27, 33, 41, 52];
+    setStatus('Loaded sample stack.');
+    addLog('Stack sample loaded');
+  } else if (state.active === 'queue') {
+    state.queue = [11, 18, 29, 36, 45];
+    setStatus('Loaded sample queue.');
+    addLog('Queue sample loaded');
+  } else {
+    const sample = [40, 24, 62, 15, 31, 51, 78, 27];
+    state.bst = null;
+    sample.forEach((value) => {
+      const result = insertBST(state.bst, value);
+      state.bst = result.node;
+    });
+    setStatus('Loaded sample BST.');
+    addLog('BST sample loaded');
+  }
+
+  renderVisualization();
+}
+
 function handleUndo() {
   if (!historyStack.length) {
     setStatus('Nothing to undo yet.');
@@ -582,6 +611,7 @@ traverseBtn.addEventListener('click', handleTraverse);
 clearBtn.addEventListener('click', handleClear);
 undoBtn.addEventListener('click', handleUndo);
 exportLogBtn.addEventListener('click', exportLog);
+sampleBtn.addEventListener('click', handleSampleLoad);
 
 valueInput.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
