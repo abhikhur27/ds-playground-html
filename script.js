@@ -16,6 +16,7 @@ const logEl = document.getElementById('log');
 const structureTitle = document.getElementById('structure-title');
 const structureNote = document.getElementById('structure-note');
 const visualArea = document.getElementById('visual-area');
+const STORAGE_KEY = 'ds_playground_html_state_v1';
 
 const structureInfo = {
   stack: {
@@ -54,6 +55,51 @@ const historyStack = [];
 let traversalModeIndex = 0;
 const traversalModes = ['In-order', 'Pre-order', 'Post-order', 'Level-order'];
 
+function syncNodeCounter() {
+  const values = [];
+  state.stack.forEach((item) => values.push(Number.parseInt(String(item.id || '').replace(/\D/g, ''), 10)));
+  state.queue.forEach((item) => values.push(Number.parseInt(String(item.id || '').replace(/\D/g, ''), 10)));
+  (function walk(node) {
+    if (!node) return;
+    values.push(Number.parseInt(String(node.id || '').replace(/\D/g, ''), 10));
+    walk(node.left);
+    walk(node.right);
+  })(state.bst);
+
+  nodeCounter = values.filter((value) => Number.isFinite(value)).reduce((max, value) => Math.max(max, value), 0);
+}
+
+function persistState() {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      active: state.active,
+      stack: state.stack,
+      queue: state.queue,
+      bst: state.bst,
+      logs: state.logs,
+    })
+  );
+}
+
+function restoreState() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+    if (!parsed) return false;
+
+    state.active = parsed.active || 'stack';
+    state.stack = Array.isArray(parsed.stack) ? parsed.stack : [];
+    state.queue = Array.isArray(parsed.queue) ? parsed.queue : [];
+    state.bst = parsed.bst || null;
+    state.logs = Array.isArray(parsed.logs) ? parsed.logs.slice(0, 16) : [];
+    logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
+    syncNodeCounter();
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 function nextNodeId() {
   nodeCounter += 1;
   return `node-${nodeCounter}`;
@@ -72,6 +118,7 @@ function addLog(message) {
   state.logs = state.logs.slice(0, 16);
 
   logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
+  persistState();
 }
 
 function cloneTree(node) {
@@ -317,6 +364,7 @@ function renderVisualization() {
 
   renderBST();
   updateMetrics();
+  persistState();
 }
 
 function updateControlLabels() {
@@ -655,5 +703,11 @@ valueInput.addEventListener('keydown', (event) => {
 });
 
 updateControlLabels();
+const restored = restoreState();
+setActiveTab(state.active);
 renderVisualization();
-addLog('Playground initialized');
+if (restored) {
+  setStatus('Restored your previous workspace state.');
+} else {
+  addLog('Playground initialized');
+}
