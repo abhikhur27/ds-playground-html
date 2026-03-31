@@ -34,6 +34,12 @@ const structureInfo = {
     addLabel: 'Enqueue',
     removeLabel: 'Dequeue',
   },
+  linked: {
+    title: 'Linked List Visualization',
+    note: 'Append nodes and remove from the head of the list.',
+    addLabel: 'Append',
+    removeLabel: 'Remove Head',
+  },
   bst: {
     title: 'Binary Search Tree Visualization',
     note: 'Ordered tree operations with path-based search.',
@@ -46,6 +52,7 @@ const state = {
   active: 'stack',
   stack: [],
   queue: [],
+  linked: [],
   bst: null,
   activeNodeId: null,
   foundNodeId: null,
@@ -79,6 +86,7 @@ function persistState() {
       active: state.active,
       stack: state.stack,
       queue: state.queue,
+      linked: state.linked,
       bst: state.bst,
       logs: state.logs,
     })
@@ -93,6 +101,7 @@ function restoreState() {
     state.active = parsed.active || 'stack';
     state.stack = Array.isArray(parsed.stack) ? parsed.stack : [];
     state.queue = Array.isArray(parsed.queue) ? parsed.queue : [];
+    state.linked = Array.isArray(parsed.linked) ? parsed.linked : [];
     state.bst = parsed.bst || null;
     state.logs = Array.isArray(parsed.logs) ? parsed.logs.slice(0, 16) : [];
     logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
@@ -177,6 +186,12 @@ function updateMetrics() {
 
   if (state.active === 'queue') {
     metricSizeEl.textContent = String(state.queue.length);
+    metricHeightEl.textContent = '-';
+    return;
+  }
+
+  if (state.active === 'linked') {
+    metricSizeEl.textContent = String(state.linked.length);
     metricHeightEl.textContent = '-';
     return;
   }
@@ -291,6 +306,19 @@ function renderQueue() {
   visualArea.innerHTML = `<div class="node-list">${nodes}</div>`;
 }
 
+function renderLinkedList() {
+  if (!state.linked.length) {
+    visualArea.innerHTML = '<p class="empty">Linked list is empty. Append a value to begin.</p>';
+    return;
+  }
+
+  const nodes = state.linked
+    .map((value, index) => `<div class="node ${index === 0 ? 'badge list-head' : ''}">${value}</div>`)
+    .join('');
+
+  visualArea.innerHTML = `<div class="node-list">${nodes}</div>`;
+}
+
 function collectTreeLayout(node, depth, minX, maxX, lines, nodes) {
   if (!node) return;
 
@@ -362,6 +390,13 @@ function renderVisualization() {
   if (state.active === 'queue') {
     renderQueue();
     updateMetrics();
+    return;
+  }
+
+  if (state.active === 'linked') {
+    renderLinkedList();
+    updateMetrics();
+    persistState();
     return;
   }
 
@@ -499,6 +534,10 @@ function handleAdd() {
     state.queue.push(value);
     setStatus(`Enqueued ${value}.`);
     addLog(`Queue enqueue ${value}`);
+  } else if (state.active === 'linked') {
+    state.linked.push(value);
+    setStatus(`Appended ${value} to linked list.`);
+    addLog(`Linked append ${value}`);
   } else {
     const result = insertBST(state.bst, value);
     state.bst = result.node;
@@ -538,6 +577,15 @@ function handleRemove() {
     const removed = state.queue.shift();
     setStatus(`Dequeued ${removed}.`);
     addLog(`Queue dequeue ${removed}`);
+  } else if (state.active === 'linked') {
+    if (!state.linked.length) {
+      setStatus('Linked list is empty.');
+      return;
+    }
+
+    const removed = state.linked.shift();
+    setStatus(`Removed head node (${removed}).`);
+    addLog(`Linked remove-head ${removed}`);
   } else {
     const value = parseInputValue();
     if (value === null) {
@@ -600,6 +648,10 @@ function handleClear() {
     state.queue = [];
     setStatus('Queue cleared.');
     addLog('Queue cleared');
+  } else if (state.active === 'linked') {
+    state.linked = [];
+    setStatus('Linked list cleared.');
+    addLog('Linked list cleared');
   } else {
     state.bst = null;
     setTraversalOutput('');
@@ -625,6 +677,10 @@ function handleSampleLoad() {
     state.queue = [11, 18, 29, 36, 45];
     setStatus('Loaded sample queue.');
     addLog('Queue sample loaded');
+  } else if (state.active === 'linked') {
+    state.linked = [5, 12, 19, 28, 34];
+    setStatus('Loaded sample linked list.');
+    addLog('Linked list sample loaded');
   } else {
     const sample = [40, 24, 62, 15, 31, 51, 78, 27];
     state.bst = null;

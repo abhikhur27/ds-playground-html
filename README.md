@@ -1,11 +1,14 @@
 # Data Structures Playground (Vanilla)
 
-Framework-free data structures visualizer for stack, queue, and binary search tree operations.
+Framework-free data structures visualizer for stack, queue, linked list, and binary search tree operations.
 
 ## Features
 
 - **Stack**: push/pop with top indicator.
 - **Queue**: enqueue/dequeue with front indicator.
+- **Linked List**:
+  - append
+  - remove head
 - **BST**:
   - insert
   - delete
@@ -48,6 +51,6 @@ Open `http://localhost:8000`.
 
 ## Future Improvements
 
-- Add linked list and heap modules.
-- Add undo/redo operation history.
-- Export and import structure states as JSON.
+- Add heap and graph modules.
+- Add redo history alongside undo.
+- Add side-by-side complexity hints per structure.
