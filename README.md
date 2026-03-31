@@ -11,6 +11,7 @@ Framework-free data structures visualizer for stack, queue, and binary search tr
   - delete
   - path-animated search
 - Operation log with timestamped actions.
+- Workspace import/export as JSON snapshots.
 - Responsive layout and keyboard-friendly controls.
 
 ## Technical Design

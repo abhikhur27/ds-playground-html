@@ -6,6 +6,9 @@ const searchBtn = document.getElementById('search-btn');
 const traverseBtn = document.getElementById('traverse-btn');
 const clearBtn = document.getElementById('clear-btn');
 const undoBtn = document.getElementById('undo-btn');
+const exportStateBtn = document.getElementById('export-state-btn');
+const importStateBtn = document.getElementById('import-state-btn');
+const importStateFile = document.getElementById('import-state-file');
 const exportLogBtn = document.getElementById('export-log-btn');
 const sampleBtn = document.getElementById('sample-btn');
 const statusEl = document.getElementById('status');
@@ -667,6 +670,56 @@ function exportLog() {
   URL.revokeObjectURL(url);
 }
 
+function exportState() {
+  const payload = {
+    active: state.active,
+    stack: state.stack,
+    queue: state.queue,
+    bst: state.bst,
+    logs: state.logs,
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'ds-playground-workspace.json';
+  link.click();
+  URL.revokeObjectURL(url);
+  setStatus('Exported workspace JSON.');
+}
+
+function importState(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(String(reader.result || '{}'));
+      state.active = parsed.active || 'stack';
+      state.stack = Array.isArray(parsed.stack) ? parsed.stack : [];
+      state.queue = Array.isArray(parsed.queue) ? parsed.queue : [];
+      state.bst = parsed.bst || null;
+      state.logs = Array.isArray(parsed.logs) ? parsed.logs.slice(0, 16) : [];
+      logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
+      clearHighlights();
+      setTraversalOutput('');
+      traversalModeIndex = 0;
+      syncNodeCounter();
+      setActiveTab(state.active);
+      renderVisualization();
+      setStatus('Imported workspace JSON.');
+    } catch (error) {
+      setStatus('Could not import that JSON snapshot.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  reader.readAsText(file);
+}
+
 function setActiveTab(tab) {
   state.active = tab;
   traversalModeIndex = 0;
@@ -693,6 +746,9 @@ searchBtn.addEventListener('click', handleSearch);
 traverseBtn.addEventListener('click', handleTraverse);
 clearBtn.addEventListener('click', handleClear);
 undoBtn.addEventListener('click', handleUndo);
+exportStateBtn.addEventListener('click', exportState);
+importStateBtn.addEventListener('click', () => importStateFile.click());
+importStateFile.addEventListener('change', importState);
 exportLogBtn.addEventListener('click', exportLog);
 sampleBtn.addEventListener('click', handleSampleLoad);
 
