@@ -6,6 +6,7 @@ const searchBtn = document.getElementById('search-btn');
 const traverseBtn = document.getElementById('traverse-btn');
 const clearBtn = document.getElementById('clear-btn');
 const undoBtn = document.getElementById('undo-btn');
+const redoBtn = document.getElementById('redo-btn');
 const exportStateBtn = document.getElementById('export-state-btn');
 const importStateBtn = document.getElementById('import-state-btn');
 const importStateFile = document.getElementById('import-state-file');
@@ -62,6 +63,7 @@ const state = {
 let nodeCounter = 0;
 let searchInProgress = false;
 const historyStack = [];
+const redoStack = [];
 let traversalModeIndex = 0;
 const traversalModes = ['In-order', 'Pre-order', 'Post-order', 'Level-order'];
 
@@ -69,6 +71,7 @@ function syncNodeCounter() {
   const values = [];
   state.stack.forEach((item) => values.push(Number.parseInt(String(item.id || '').replace(/\D/g, ''), 10)));
   state.queue.forEach((item) => values.push(Number.parseInt(String(item.id || '').replace(/\D/g, ''), 10)));
+  state.linked.forEach((item) => values.push(Number.parseInt(String(item.id || '').replace(/\D/g, ''), 10)));
   (function walk(node) {
     if (!node) return;
     values.push(Number.parseInt(String(node.id || '').replace(/\D/g, ''), 10));
@@ -147,6 +150,7 @@ function captureSnapshot() {
   historyStack.push({
     stack: [...state.stack],
     queue: [...state.queue],
+    linked: [...state.linked],
     bst: cloneTree(state.bst),
     logs: [...state.logs],
   });
@@ -154,11 +158,14 @@ function captureSnapshot() {
   if (historyStack.length > 80) {
     historyStack.shift();
   }
+
+  redoStack.length = 0;
 }
 
 function applySnapshot(snapshot) {
   state.stack = [...snapshot.stack];
   state.queue = [...snapshot.queue];
+  state.linked = [...(snapshot.linked || [])];
   state.bst = cloneTree(snapshot.bst);
   state.logs = [...snapshot.logs];
   logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
@@ -701,6 +708,13 @@ function handleUndo() {
     return;
   }
 
+  redoStack.push({
+    stack: [...state.stack],
+    queue: [...state.queue],
+    linked: [...state.linked],
+    bst: cloneTree(state.bst),
+    logs: [...state.logs],
+  });
   const snapshot = historyStack.pop();
   applySnapshot(snapshot);
   clearHighlights();
@@ -708,6 +722,29 @@ function handleUndo() {
   renderVisualization();
   setStatus('Undid last structural change.');
   addLog('Undo applied');
+}
+
+function handleRedo() {
+  if (!redoStack.length) {
+    setStatus('Nothing to redo yet.');
+    return;
+  }
+
+  historyStack.push({
+    stack: [...state.stack],
+    queue: [...state.queue],
+    linked: [...state.linked],
+    bst: cloneTree(state.bst),
+    logs: [...state.logs],
+  });
+
+  const snapshot = redoStack.pop();
+  applySnapshot(snapshot);
+  clearHighlights();
+  setTraversalOutput('');
+  renderVisualization();
+  setStatus('Reapplied last undone change.');
+  addLog('Redo applied');
 }
 
 function exportLog() {
@@ -731,6 +768,7 @@ function exportState() {
     active: state.active,
     stack: state.stack,
     queue: state.queue,
+    linked: state.linked,
     bst: state.bst,
     logs: state.logs,
   };
@@ -756,6 +794,7 @@ function importState(event) {
       state.active = parsed.active || 'stack';
       state.stack = Array.isArray(parsed.stack) ? parsed.stack : [];
       state.queue = Array.isArray(parsed.queue) ? parsed.queue : [];
+      state.linked = Array.isArray(parsed.linked) ? parsed.linked : [];
       state.bst = parsed.bst || null;
       state.logs = Array.isArray(parsed.logs) ? parsed.logs.slice(0, 16) : [];
       logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
@@ -802,6 +841,7 @@ searchBtn.addEventListener('click', handleSearch);
 traverseBtn.addEventListener('click', handleTraverse);
 clearBtn.addEventListener('click', handleClear);
 undoBtn.addEventListener('click', handleUndo);
+redoBtn.addEventListener('click', handleRedo);
 exportStateBtn.addEventListener('click', exportState);
 importStateBtn.addEventListener('click', () => importStateFile.click());
 importStateFile.addEventListener('change', importState);

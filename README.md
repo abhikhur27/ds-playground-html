@@ -15,7 +15,9 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
   - path-animated search
 - Operation log with timestamped actions.
 - Workspace import/export as JSON snapshots.
+- Workspace import/export now preserves linked-list state alongside stack, queue, and BST data.
 - Responsive layout and keyboard-friendly controls.
+- Undo and redo history for structural edits.
 
 ## Technical Design
 
@@ -52,5 +54,5 @@ Open `http://localhost:8000`.
 ## Future Improvements
 
 - Add heap and graph modules.
-- Add redo history alongside undo.
 - Add side-by-side complexity hints per structure.
+- Add queue/linked-list search variants beyond remove-head.
