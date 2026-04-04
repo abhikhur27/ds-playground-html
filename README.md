@@ -19,6 +19,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Responsive layout and keyboard-friendly controls.
 - Undo and redo history for structural edits.
 - Search now works across stack, queue, and linked-list modes in addition to BST path search.
+- Active-structure complexity guide for add/remove/lookup operations.
 
 ## Technical Design
 

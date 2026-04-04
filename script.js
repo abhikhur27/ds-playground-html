@@ -16,6 +16,9 @@ const statusEl = document.getElementById('status');
 const traversalOutputEl = document.getElementById('traversal-output');
 const metricSizeEl = document.getElementById('metric-size');
 const metricHeightEl = document.getElementById('metric-height');
+const complexityAddEl = document.getElementById('complexity-add');
+const complexityRemoveEl = document.getElementById('complexity-remove');
+const complexityLookupEl = document.getElementById('complexity-lookup');
 const logEl = document.getElementById('log');
 const structureTitle = document.getElementById('structure-title');
 const structureNote = document.getElementById('structure-note');
@@ -47,6 +50,13 @@ const structureInfo = {
     addLabel: 'Insert',
     removeLabel: 'Delete',
   },
+};
+
+const complexityInfo = {
+  stack: { add: 'Push O(1)', remove: 'Pop O(1)', lookup: 'Peek O(1)' },
+  queue: { add: 'Enqueue O(1)', remove: 'Dequeue O(1)', lookup: 'Front O(1)' },
+  linked: { add: 'Append O(1) amortized', remove: 'Remove head O(1)', lookup: 'Tail read O(1)' },
+  bst: { add: 'Insert O(log n) avg', remove: 'Delete O(log n) avg', lookup: 'Search O(log n) avg' },
 };
 
 const state = {
@@ -427,10 +437,14 @@ function renderVisualization() {
 
 function updateControlLabels() {
   const info = structureInfo[state.active];
+  const complexity = complexityInfo[state.active];
   structureTitle.textContent = info.title;
   structureNote.textContent = info.note;
   addBtn.textContent = info.addLabel;
   removeBtn.textContent = info.removeLabel;
+  complexityAddEl.textContent = complexity.add;
+  complexityRemoveEl.textContent = complexity.remove;
+  complexityLookupEl.textContent = complexity.lookup;
 
   const isBST = state.active === 'bst';
   searchBtn.classList.toggle('hidden', false);
