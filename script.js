@@ -292,7 +292,10 @@ function renderStack() {
   const nodes = state.stack
     .map((value, index) => {
       const isTop = index === state.stack.length - 1;
-      return `<div class="node ${isTop ? 'badge top' : ''}">${value}</div>`;
+      const nodeKey = `stack-${index}`;
+      const activeClass = state.activeNodeId === nodeKey ? 'active' : '';
+      const foundClass = state.foundNodeId === nodeKey ? 'found' : '';
+      return `<div class="node ${isTop ? 'badge top' : ''} ${activeClass} ${foundClass}">${value}</div>`;
     })
     .reverse()
     .join('');
@@ -307,7 +310,12 @@ function renderQueue() {
   }
 
   const nodes = state.queue
-    .map((value, index) => `<div class="node ${index === 0 ? 'badge front' : ''}">${value}</div>`)
+    .map((value, index) => {
+      const nodeKey = `queue-${index}`;
+      const activeClass = state.activeNodeId === nodeKey ? 'active' : '';
+      const foundClass = state.foundNodeId === nodeKey ? 'found' : '';
+      return `<div class="node ${index === 0 ? 'badge front' : ''} ${activeClass} ${foundClass}">${value}</div>`;
+    })
     .join('');
 
   visualArea.innerHTML = `<div class="node-list">${nodes}</div>`;
@@ -320,7 +328,12 @@ function renderLinkedList() {
   }
 
   const nodes = state.linked
-    .map((value, index) => `<div class="node ${index === 0 ? 'badge list-head' : ''}">${value}</div>`)
+    .map((value, index) => {
+      const nodeKey = `linked-${index}`;
+      const activeClass = state.activeNodeId === nodeKey ? 'active' : '';
+      const foundClass = state.foundNodeId === nodeKey ? 'found' : '';
+      return `<div class="node ${index === 0 ? 'badge list-head' : ''} ${activeClass} ${foundClass}">${value}</div>`;
+    })
     .join('');
 
   visualArea.innerHTML = `<div class="node-list">${nodes}</div>`;
@@ -420,7 +433,7 @@ function updateControlLabels() {
   removeBtn.textContent = info.removeLabel;
 
   const isBST = state.active === 'bst';
-  searchBtn.classList.toggle('hidden', !isBST);
+  searchBtn.classList.toggle('hidden', false);
   traverseBtn.classList.toggle('hidden', !isBST);
   if (!isBST) {
     setTraversalOutput('');
@@ -618,10 +631,35 @@ function handleRemove() {
 }
 
 async function handleSearch() {
-  if (state.active !== 'bst') return;
-  if (searchInProgress) return;
-
   const value = parseInputValue();
+  if (state.active !== 'bst') {
+    if (value === null) {
+      setStatus('Enter a valid integer to search in the active structure.');
+      return;
+    }
+
+    const values = state.active === 'stack' ? state.stack : state.active === 'queue' ? state.queue : state.linked;
+    if (!values.length) {
+      setStatus(`${structureInfo[state.active].title} is empty.`);
+      return;
+    }
+
+    const foundIndex = values.indexOf(value);
+    clearHighlights();
+    if (foundIndex >= 0) {
+      state.activeNodeId = `${state.active}-${foundIndex}`;
+      state.foundNodeId = `${state.active}-${foundIndex}`;
+      setStatus(`Found ${value} in ${structureInfo[state.active].title.toLowerCase()}.`);
+      addLog(`${state.active} search hit ${value}`);
+    } else {
+      setStatus(`${value} not found in ${structureInfo[state.active].title.toLowerCase()}.`);
+      addLog(`${state.active} search miss ${value}`);
+    }
+    renderVisualization();
+    return;
+  }
+
+  if (searchInProgress) return;
   if (value === null) {
     setStatus('Enter a valid integer to search in BST.');
     return;

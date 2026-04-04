@@ -239,6 +239,16 @@ button:hover {
   box-shadow: 0 8px 16px rgba(15, 118, 110, 0.12);
 }
 
+.node.active {
+  background: #fef3c7;
+  border-color: #d97706;
+}
+
+.node.found {
+  background: #bbf7d0;
+  border-color: #15803d;
+}
+
 .node.badge::after {
   display: block;
   margin-top: 0.25rem;
