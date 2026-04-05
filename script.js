@@ -16,6 +16,10 @@ const statusEl = document.getElementById('status');
 const traversalOutputEl = document.getElementById('traversal-output');
 const metricSizeEl = document.getElementById('metric-size');
 const metricHeightEl = document.getElementById('metric-height');
+const metricMinEl = document.getElementById('metric-min');
+const metricMaxEl = document.getElementById('metric-max');
+const metricLeavesEl = document.getElementById('metric-leaves');
+const metricBalanceEl = document.getElementById('metric-balance');
 const complexityAddEl = document.getElementById('complexity-add');
 const complexityRemoveEl = document.getElementById('complexity-remove');
 const complexityLookupEl = document.getElementById('complexity-lookup');
@@ -194,22 +198,60 @@ function bstHeight(node) {
   return 1 + Math.max(bstHeight(node.left), bstHeight(node.right));
 }
 
+function bstLeafCount(node) {
+  if (!node) return 0;
+  if (!node.left && !node.right) return 1;
+  return bstLeafCount(node.left) + bstLeafCount(node.right);
+}
+
+function bstMin(node) {
+  let current = node;
+  while (current?.left) current = current.left;
+  return current?.value ?? '-';
+}
+
+function bstMax(node) {
+  let current = node;
+  while (current?.right) current = current.right;
+  return current?.value ?? '-';
+}
+
+function bstShapeLabel(node) {
+  if (!node) return '-';
+  const spread = Math.abs(bstHeight(node.left) - bstHeight(node.right));
+  if (spread <= 1) return 'Balanced';
+  if (spread <= 3) return 'Leaning';
+  return 'Skewed';
+}
+
 function updateMetrics() {
   if (state.active === 'stack') {
     metricSizeEl.textContent = String(state.stack.length);
     metricHeightEl.textContent = '-';
+    metricMinEl.textContent = '-';
+    metricMaxEl.textContent = '-';
+    metricLeavesEl.textContent = '-';
+    metricBalanceEl.textContent = '-';
     return;
   }
 
   if (state.active === 'queue') {
     metricSizeEl.textContent = String(state.queue.length);
     metricHeightEl.textContent = '-';
+    metricMinEl.textContent = '-';
+    metricMaxEl.textContent = '-';
+    metricLeavesEl.textContent = '-';
+    metricBalanceEl.textContent = '-';
     return;
   }
 
   if (state.active === 'linked') {
     metricSizeEl.textContent = String(state.linked.length);
     metricHeightEl.textContent = '-';
+    metricMinEl.textContent = '-';
+    metricMaxEl.textContent = '-';
+    metricLeavesEl.textContent = '-';
+    metricBalanceEl.textContent = '-';
     return;
   }
 
@@ -223,6 +265,10 @@ function updateMetrics() {
 
   metricSizeEl.textContent = String(count);
   metricHeightEl.textContent = String(bstHeight(state.bst));
+  metricMinEl.textContent = String(bstMin(state.bst));
+  metricMaxEl.textContent = String(bstMax(state.bst));
+  metricLeavesEl.textContent = String(bstLeafCount(state.bst));
+  metricBalanceEl.textContent = bstShapeLabel(state.bst);
 }
 
 function insertBST(node, value) {
