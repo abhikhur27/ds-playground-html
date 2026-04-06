@@ -4,6 +4,7 @@ const addBtn = document.getElementById('add-btn');
 const removeBtn = document.getElementById('remove-btn');
 const searchBtn = document.getElementById('search-btn');
 const traverseBtn = document.getElementById('traverse-btn');
+const reverseBtn = document.getElementById('reverse-btn');
 const clearBtn = document.getElementById('clear-btn');
 const undoBtn = document.getElementById('undo-btn');
 const redoBtn = document.getElementById('redo-btn');
@@ -495,9 +496,41 @@ function updateControlLabels() {
   const isBST = state.active === 'bst';
   searchBtn.classList.toggle('hidden', false);
   traverseBtn.classList.toggle('hidden', !isBST);
+  reverseBtn.classList.toggle('hidden', isBST);
+  reverseBtn.textContent =
+    state.active === 'queue' ? 'Reverse Queue' : state.active === 'linked' ? 'Reverse Linked List' : 'Reverse Stack';
   if (!isBST) {
     setTraversalOutput('');
   }
+}
+
+function handleReverse() {
+  if (state.active === 'bst') {
+    setStatus('Reverse order is only available for stack, queue, and linked-list views.');
+    return;
+  }
+
+  const values = state.active === 'stack' ? state.stack : state.active === 'queue' ? state.queue : state.linked;
+  if (values.length < 2) {
+    setStatus(`Need at least two items to reverse the ${structureInfo[state.active].title.toLowerCase()}.`);
+    return;
+  }
+
+  captureSnapshot();
+  if (state.active === 'stack') {
+    state.stack = [...state.stack].reverse();
+    addLog('Stack reversed');
+  } else if (state.active === 'queue') {
+    state.queue = [...state.queue].reverse();
+    addLog('Queue reversed');
+  } else {
+    state.linked = [...state.linked].reverse();
+    addLog('Linked list reversed');
+  }
+
+  clearHighlights();
+  setStatus(`${structureInfo[state.active].title} reversed.`);
+  renderVisualization();
 }
 
 async function animateSearch(path, foundId) {
@@ -937,6 +970,7 @@ addBtn.addEventListener('click', handleAdd);
 removeBtn.addEventListener('click', handleRemove);
 searchBtn.addEventListener('click', handleSearch);
 traverseBtn.addEventListener('click', handleTraverse);
+reverseBtn.addEventListener('click', handleReverse);
 clearBtn.addEventListener('click', handleClear);
 undoBtn.addEventListener('click', handleUndo);
 redoBtn.addEventListener('click', handleRedo);
