@@ -16,11 +16,17 @@ const sampleBtn = document.getElementById('sample-btn');
 const statusEl = document.getElementById('status');
 const traversalOutputEl = document.getElementById('traversal-output');
 const metricSizeEl = document.getElementById('metric-size');
+const metricSizeLabelEl = document.getElementById('metric-size-label');
 const metricHeightEl = document.getElementById('metric-height');
+const metricHeightLabelEl = document.getElementById('metric-height-label');
 const metricMinEl = document.getElementById('metric-min');
+const metricMinLabelEl = document.getElementById('metric-min-label');
 const metricMaxEl = document.getElementById('metric-max');
+const metricMaxLabelEl = document.getElementById('metric-max-label');
 const metricLeavesEl = document.getElementById('metric-leaves');
+const metricLeavesLabelEl = document.getElementById('metric-leaves-label');
 const metricBalanceEl = document.getElementById('metric-balance');
+const metricBalanceLabelEl = document.getElementById('metric-balance-label');
 const complexityAddEl = document.getElementById('complexity-add');
 const complexityRemoveEl = document.getElementById('complexity-remove');
 const complexityLookupEl = document.getElementById('complexity-lookup');
@@ -225,36 +231,70 @@ function bstShapeLabel(node) {
   return 'Skewed';
 }
 
+function duplicateRate(values) {
+  if (!values.length) return '0%';
+  const unique = new Set(values).size;
+  return `${Math.round(((values.length - unique) / values.length) * 100)}%`;
+}
+
 function updateMetrics() {
   if (state.active === 'stack') {
+    const values = state.stack.map((item) => item.value);
+    metricSizeLabelEl.textContent = 'Size';
+    metricHeightLabelEl.textContent = 'Top';
+    metricMinLabelEl.textContent = 'Bottom';
+    metricMaxLabelEl.textContent = 'Min';
+    metricLeavesLabelEl.textContent = 'Max';
+    metricBalanceLabelEl.textContent = 'Duplicates';
     metricSizeEl.textContent = String(state.stack.length);
-    metricHeightEl.textContent = '-';
-    metricMinEl.textContent = '-';
-    metricMaxEl.textContent = '-';
-    metricLeavesEl.textContent = '-';
-    metricBalanceEl.textContent = '-';
+    metricHeightEl.textContent = values.length ? String(values[values.length - 1]) : '-';
+    metricMinEl.textContent = values.length ? String(values[0]) : '-';
+    metricMaxEl.textContent = values.length ? String(Math.min(...values)) : '-';
+    metricLeavesEl.textContent = values.length ? String(Math.max(...values)) : '-';
+    metricBalanceEl.textContent = duplicateRate(values);
     return;
   }
 
   if (state.active === 'queue') {
+    const values = state.queue.map((item) => item.value);
+    metricSizeLabelEl.textContent = 'Size';
+    metricHeightLabelEl.textContent = 'Front';
+    metricMinLabelEl.textContent = 'Back';
+    metricMaxLabelEl.textContent = 'Min';
+    metricLeavesLabelEl.textContent = 'Max';
+    metricBalanceLabelEl.textContent = 'Duplicates';
     metricSizeEl.textContent = String(state.queue.length);
-    metricHeightEl.textContent = '-';
-    metricMinEl.textContent = '-';
-    metricMaxEl.textContent = '-';
-    metricLeavesEl.textContent = '-';
-    metricBalanceEl.textContent = '-';
+    metricHeightEl.textContent = values.length ? String(values[0]) : '-';
+    metricMinEl.textContent = values.length ? String(values[values.length - 1]) : '-';
+    metricMaxEl.textContent = values.length ? String(Math.min(...values)) : '-';
+    metricLeavesEl.textContent = values.length ? String(Math.max(...values)) : '-';
+    metricBalanceEl.textContent = duplicateRate(values);
     return;
   }
 
   if (state.active === 'linked') {
+    const values = state.linked.map((item) => item.value);
+    metricSizeLabelEl.textContent = 'Size';
+    metricHeightLabelEl.textContent = 'Head';
+    metricMinLabelEl.textContent = 'Tail';
+    metricMaxLabelEl.textContent = 'Min';
+    metricLeavesLabelEl.textContent = 'Max';
+    metricBalanceLabelEl.textContent = 'Duplicates';
     metricSizeEl.textContent = String(state.linked.length);
-    metricHeightEl.textContent = '-';
-    metricMinEl.textContent = '-';
-    metricMaxEl.textContent = '-';
-    metricLeavesEl.textContent = '-';
-    metricBalanceEl.textContent = '-';
+    metricHeightEl.textContent = values.length ? String(values[0]) : '-';
+    metricMinEl.textContent = values.length ? String(values[values.length - 1]) : '-';
+    metricMaxEl.textContent = values.length ? String(Math.min(...values)) : '-';
+    metricLeavesEl.textContent = values.length ? String(Math.max(...values)) : '-';
+    metricBalanceEl.textContent = duplicateRate(values);
     return;
   }
+
+  metricSizeLabelEl.textContent = 'Size';
+  metricHeightLabelEl.textContent = 'BST Height';
+  metricMinLabelEl.textContent = 'BST Min';
+  metricMaxLabelEl.textContent = 'BST Max';
+  metricLeavesLabelEl.textContent = 'Leaf Count';
+  metricBalanceLabelEl.textContent = 'Shape';
 
   let count = 0;
   (function walk(node) {

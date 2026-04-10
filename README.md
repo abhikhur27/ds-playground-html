@@ -20,6 +20,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Undo and redo history for structural edits.
 - Search now works across stack, queue, and linked-list modes in addition to BST path search.
 - Active-structure complexity guide for add/remove/lookup operations.
+- Active-structure metric cards now switch between linear snapshots (top/front/head, range, duplicates) and BST diagnostics.
 - BST diagnostics now surface min/max values, leaf count, and balance shape.
 
 ## Technical Design
