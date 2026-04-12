@@ -101,17 +101,24 @@ label {
 }
 
 input,
+textarea,
 button {
   font: inherit;
 }
 
-input {
+input,
+textarea {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.5rem;
   background: #f9fbff;
   color: var(--text);
   font-family: "JetBrains Mono", monospace;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 88px;
 }
 
 .button-grid {

@@ -1,7 +1,9 @@
 const tabs = Array.from(document.querySelectorAll('.tab'));
 const valueInput = document.getElementById('value-input');
+const sequenceInput = document.getElementById('sequence-input');
 const addBtn = document.getElementById('add-btn');
 const removeBtn = document.getElementById('remove-btn');
+const loadSequenceBtn = document.getElementById('load-sequence-btn');
 const searchBtn = document.getElementById('search-btn');
 const traverseBtn = document.getElementById('traverse-btn');
 const reverseBtn = document.getElementById('reverse-btn');
@@ -198,6 +200,18 @@ function parseInputValue() {
     return null;
   }
   return parsed;
+}
+
+function parseSequenceValues() {
+  const raw = sequenceInput.value.trim();
+  if (!raw) return null;
+
+  const values = raw
+    .split(/[\s,]+/)
+    .map((token) => Number.parseInt(token.trim(), 10))
+    .filter((value) => Number.isInteger(value));
+
+  return values.length ? values : null;
 }
 
 function bstHeight(node) {
@@ -763,6 +777,46 @@ function handleRemove() {
   renderVisualization();
 }
 
+function handleLoadSequence() {
+  const values = parseSequenceValues();
+  if (!values) {
+    setStatus('Enter a comma- or space-separated integer sequence first.');
+    return;
+  }
+
+  clearHighlights();
+  captureSnapshot();
+  setTraversalOutput('');
+
+  if (state.active === 'stack') {
+    state.stack = [...state.stack, ...values.map((value) => ({ id: nextNodeId(), value }))];
+    addLog(`Loaded ${values.length} value${values.length === 1 ? '' : 's'} into stack.`);
+  } else if (state.active === 'queue') {
+    state.queue = [...state.queue, ...values.map((value) => ({ id: nextNodeId(), value }))];
+    addLog(`Loaded ${values.length} value${values.length === 1 ? '' : 's'} into queue.`);
+  } else if (state.active === 'linked') {
+    state.linked = [...state.linked, ...values.map((value) => ({ id: nextNodeId(), value }))];
+    addLog(`Loaded ${values.length} value${values.length === 1 ? '' : 's'} into linked list.`);
+  } else {
+    let inserted = 0;
+    values.forEach((value) => {
+      const result = insertBST(state.bst, value);
+      state.bst = result.node;
+      if (result.inserted) inserted += 1;
+    });
+    addLog(`Loaded BST sequence: inserted ${inserted}/${values.length} unique value${values.length === 1 ? '' : 's'}.`);
+  }
+
+  persistState();
+  renderVisualization();
+  updateMetrics();
+  setStatus(
+    state.active === 'bst'
+      ? `Loaded ${values.length} values into the BST. Duplicate inserts were ignored.`
+      : `Loaded ${values.length} values into the ${structureInfo[state.active].title.toLowerCase()}.`
+  );
+}
+
 async function handleSearch() {
   const value = parseInputValue();
   if (state.active !== 'bst') {
@@ -1008,6 +1062,7 @@ tabs.forEach((button) => {
 
 addBtn.addEventListener('click', handleAdd);
 removeBtn.addEventListener('click', handleRemove);
+loadSequenceBtn.addEventListener('click', handleLoadSequence);
 searchBtn.addEventListener('click', handleSearch);
 traverseBtn.addEventListener('click', handleTraverse);
 reverseBtn.addEventListener('click', handleReverse);
