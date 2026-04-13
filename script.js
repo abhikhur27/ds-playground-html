@@ -35,6 +35,8 @@ const complexityLookupEl = document.getElementById('complexity-lookup');
 const logEl = document.getElementById('log');
 const structureTitle = document.getElementById('structure-title');
 const structureNote = document.getElementById('structure-note');
+const snapshotSummaryEl = document.getElementById('snapshot-summary');
+const snapshotChipsEl = document.getElementById('snapshot-chips');
 const visualArea = document.getElementById('visual-area');
 const STORAGE_KEY = 'ds_playground_html_state_v1';
 
@@ -249,6 +251,70 @@ function duplicateRate(values) {
   if (!values.length) return '0%';
   const unique = new Set(values).size;
   return `${Math.round(((values.length - unique) / values.length) * 100)}%`;
+}
+
+function summarizeLinearShape(values) {
+  if (!values.length) {
+    return {
+      summary: 'No nodes loaded yet. Add values or load a sequence to inspect the structure shape.',
+      chips: [],
+    };
+  }
+
+  const sortedAscending = values.every((value, index) => index === 0 || value >= values[index - 1]);
+  const sortedDescending = values.every((value, index) => index === 0 || value <= values[index - 1]);
+  const span = `${Math.min(...values)}-${Math.max(...values)}`;
+  const direction = sortedAscending ? 'ascending' : sortedDescending ? 'descending' : 'mixed';
+
+  return {
+    summary: `${values.length} node${values.length === 1 ? '' : 's'} loaded with ${direction} ordering across a ${span} value span.`,
+    chips: [`Head ${values[0]}`, `Tail ${values[values.length - 1]}`, `Duplicate rate ${duplicateRate(values)}`, `Span ${span}`],
+  };
+}
+
+function summarizeBstShape() {
+  if (!state.bst) {
+    return {
+      summary: 'No BST loaded yet. Insert nodes or load a sequence to inspect branch health.',
+      chips: [],
+    };
+  }
+
+  const values = [];
+  (function collect(node) {
+    if (!node) return;
+    values.push(node.value);
+    collect(node.left);
+    collect(node.right);
+  })(state.bst);
+
+  const height = bstHeight(state.bst);
+  const leaves = bstLeafCount(state.bst);
+  const balance = bstBalanceLabel(state.bst);
+
+  return {
+    summary: `BST holds ${values.length} unique node${values.length === 1 ? '' : 's'} over ${height} level${height === 1 ? '' : 's'} and currently reads as ${balance.toLowerCase()}.`,
+    chips: [`Root ${state.bst.value}`, `Leaves ${leaves}`, `Range ${Math.min(...values)}-${Math.max(...values)}`, `Shape ${balance}`],
+  };
+}
+
+function renderStructureSnapshot() {
+  if (!snapshotSummaryEl || !snapshotChipsEl) return;
+
+  const values =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.active === 'linked'
+          ? state.linked.map((item) => item.value)
+          : [];
+
+  const payload = state.active === 'bst' ? summarizeBstShape() : summarizeLinearShape(values);
+  snapshotSummaryEl.textContent = payload.summary;
+  snapshotChipsEl.innerHTML = payload.chips.length
+    ? payload.chips.map((chip) => `<span class="snapshot-chip">${chip}</span>`).join('')
+    : '<span class="snapshot-chip">Waiting for data</span>';
 }
 
 function updateMetrics() {
@@ -515,24 +581,28 @@ function renderVisualization() {
   if (state.active === 'stack') {
     renderStack();
     updateMetrics();
+    renderStructureSnapshot();
     return;
   }
 
   if (state.active === 'queue') {
     renderQueue();
     updateMetrics();
+    renderStructureSnapshot();
     return;
   }
 
   if (state.active === 'linked') {
     renderLinkedList();
     updateMetrics();
+    renderStructureSnapshot();
     persistState();
     return;
   }
 
   renderBST();
   updateMetrics();
+  renderStructureSnapshot();
   persistState();
 }
 

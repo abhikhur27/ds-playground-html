@@ -219,6 +219,35 @@ button:hover {
   color: var(--muted);
 }
 
+.snapshot-panel {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(110, 168, 254, 0.08), rgba(255, 255, 255, 0.98));
+}
+
+.snapshot-panel h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.snapshot-chips {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.snapshot-chip {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.4rem 0.7rem;
+  background: #ffffff;
+  font-size: 0.83rem;
+  color: var(--muted);
+}
+
 .visual-area {
   margin-top: 0.8rem;
   min-height: 430px;
