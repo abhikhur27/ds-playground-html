@@ -10,6 +10,7 @@ const reverseBtn = document.getElementById('reverse-btn');
 const clearBtn = document.getElementById('clear-btn');
 const undoBtn = document.getElementById('undo-btn');
 const redoBtn = document.getElementById('redo-btn');
+const shareStateBtn = document.getElementById('share-state-btn');
 const exportStateBtn = document.getElementById('export-state-btn');
 const importStateBtn = document.getElementById('import-state-btn');
 const importStateFile = document.getElementById('import-state-file');
@@ -108,6 +109,7 @@ function syncNodeCounter() {
 }
 
 function persistState() {
+  syncUrlState();
   localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify({
@@ -119,6 +121,42 @@ function persistState() {
       logs: state.logs,
     })
   );
+}
+
+function currentWorkspaceSnapshot() {
+  return {
+    active: state.active,
+    stack: state.stack,
+    queue: state.queue,
+    linked: state.linked,
+    bst: state.bst,
+  };
+}
+
+function syncUrlState() {
+  const params = new URLSearchParams(window.location.search);
+  params.set('workspace', encodeURIComponent(JSON.stringify(currentWorkspaceSnapshot())));
+  const nextUrl = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, '', nextUrl);
+}
+
+function hydrateFromUrlState() {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get('workspace');
+  if (!raw) return false;
+
+  try {
+    const parsed = JSON.parse(decodeURIComponent(raw));
+    state.active = parsed.active || 'stack';
+    state.stack = Array.isArray(parsed.stack) ? parsed.stack : [];
+    state.queue = Array.isArray(parsed.queue) ? parsed.queue : [];
+    state.linked = Array.isArray(parsed.linked) ? parsed.linked : [];
+    state.bst = parsed.bst || null;
+    syncNodeCounter();
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 function restoreState() {
@@ -1140,6 +1178,15 @@ clearBtn.addEventListener('click', handleClear);
 undoBtn.addEventListener('click', handleUndo);
 redoBtn.addEventListener('click', handleRedo);
 exportStateBtn.addEventListener('click', exportState);
+shareStateBtn.addEventListener('click', async () => {
+  syncUrlState();
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    setStatus('Share link copied with the current workspace snapshot.');
+  } catch (error) {
+    setStatus('Clipboard copy failed in this environment.');
+  }
+});
 importStateBtn.addEventListener('click', () => importStateFile.click());
 importStateFile.addEventListener('change', importState);
 exportLogBtn.addEventListener('click', exportLog);
@@ -1152,10 +1199,13 @@ valueInput.addEventListener('keydown', (event) => {
 });
 
 updateControlLabels();
-const restored = restoreState();
+const restoredFromUrl = hydrateFromUrlState();
+const restored = restoredFromUrl || restoreState();
 setActiveTab(state.active);
 renderVisualization();
-if (restored) {
+if (restoredFromUrl) {
+  setStatus('Loaded workspace snapshot from the URL.');
+} else if (restored) {
   setStatus('Restored your previous workspace state.');
 } else {
   addLog('Playground initialized');
