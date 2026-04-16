@@ -6,6 +6,7 @@ const removeBtn = document.getElementById('remove-btn');
 const loadSequenceBtn = document.getElementById('load-sequence-btn');
 const searchBtn = document.getElementById('search-btn');
 const traverseBtn = document.getElementById('traverse-btn');
+const rebalanceBtn = document.getElementById('rebalance-btn');
 const reverseBtn = document.getElementById('reverse-btn');
 const clearBtn = document.getElementById('clear-btn');
 const undoBtn = document.getElementById('undo-btn');
@@ -483,6 +484,26 @@ function deleteBST(node, value) {
   return { node: { ...node }, deleted: true };
 }
 
+function collectBSTValues(node, output = []) {
+  if (!node) return output;
+  collectBSTValues(node.left, output);
+  output.push(node.value);
+  collectBSTValues(node.right, output);
+  return output;
+}
+
+function buildBalancedBST(values, start = 0, end = values.length - 1) {
+  if (start > end) return null;
+
+  const mid = Math.floor((start + end) / 2);
+  return {
+    id: nextNodeId(),
+    value: values[mid],
+    left: buildBalancedBST(values, start, mid - 1),
+    right: buildBalancedBST(values, mid + 1, end),
+  };
+}
+
 function buildSearchPath(root, target) {
   const path = [];
   let current = root;
@@ -658,6 +679,7 @@ function updateControlLabels() {
   const isBST = state.active === 'bst';
   searchBtn.classList.toggle('hidden', false);
   traverseBtn.classList.toggle('hidden', !isBST);
+  rebalanceBtn.classList.toggle('hidden', !isBST);
   reverseBtn.classList.toggle('hidden', isBST);
   reverseBtn.textContent =
     state.active === 'queue' ? 'Reverse Queue' : state.active === 'linked' ? 'Reverse Linked List' : 'Reverse Stack';
@@ -789,6 +811,27 @@ function handleTraverse() {
   setStatus(`Traversal computed (${mode}).`);
   addLog(`BST traversal ${mode.toLowerCase()}`);
   traversalModeIndex = (traversalModeIndex + 1) % traversalModes.length;
+}
+
+function handleRebalance() {
+  if (state.active !== 'bst') {
+    setStatus('BST rebalancing is only available in the BST view.');
+    return;
+  }
+
+  const values = collectBSTValues(state.bst);
+  if (values.length < 3) {
+    setStatus('Need at least three BST nodes before rebalancing changes anything.');
+    return;
+  }
+
+  clearHighlights();
+  captureSnapshot();
+  state.bst = buildBalancedBST(values);
+  setTraversalOutput('');
+  render();
+  setStatus(`Rebuilt the BST into a more balanced shape across ${values.length} nodes.`);
+  addLog('BST rebalanced from in-order values');
 }
 
 function handleAdd() {
@@ -1173,6 +1216,7 @@ removeBtn.addEventListener('click', handleRemove);
 loadSequenceBtn.addEventListener('click', handleLoadSequence);
 searchBtn.addEventListener('click', handleSearch);
 traverseBtn.addEventListener('click', handleTraverse);
+rebalanceBtn.addEventListener('click', handleRebalance);
 reverseBtn.addEventListener('click', handleReverse);
 clearBtn.addEventListener('click', handleClear);
 undoBtn.addEventListener('click', handleUndo);

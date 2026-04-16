@@ -18,6 +18,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Workspace import/export now preserves linked-list state alongside stack, queue, and BST data.
 - Responsive layout and keyboard-friendly controls.
 - Undo and redo history for structural edits.
+- BST rebalance control rebuilds the current tree from its in-order values to show how shape affects lookup behavior.
 - Search now works across stack, queue, and linked-list modes in addition to BST path search.
 - Active-structure complexity guide for add/remove/lookup operations.
 - Active-structure metric cards now switch between linear snapshots (top/front/head, range, duplicates) and BST diagnostics.
