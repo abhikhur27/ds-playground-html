@@ -23,6 +23,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Active-structure complexity guide for add/remove/lookup operations.
 - Active-structure metric cards now switch between linear snapshots (top/front/head, range, duplicates) and BST diagnostics.
 - BST diagnostics now surface min/max values, leaf count, and balance shape.
+- Linear structures now keep stable node objects across manual add, sample load, import, and search flows so highlights and metrics stay correct.
 
 ## Technical Design
 

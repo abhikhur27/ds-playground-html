@@ -149,9 +149,9 @@ function hydrateFromUrlState() {
   try {
     const parsed = JSON.parse(decodeURIComponent(raw));
     state.active = parsed.active || 'stack';
-    state.stack = Array.isArray(parsed.stack) ? parsed.stack : [];
-    state.queue = Array.isArray(parsed.queue) ? parsed.queue : [];
-    state.linked = Array.isArray(parsed.linked) ? parsed.linked : [];
+    state.stack = Array.isArray(parsed.stack) ? normalizeLinearItems(parsed.stack) : [];
+    state.queue = Array.isArray(parsed.queue) ? normalizeLinearItems(parsed.queue) : [];
+    state.linked = Array.isArray(parsed.linked) ? normalizeLinearItems(parsed.linked) : [];
     state.bst = parsed.bst || null;
     syncNodeCounter();
     return true;
@@ -166,9 +166,9 @@ function restoreState() {
     if (!parsed) return false;
 
     state.active = parsed.active || 'stack';
-    state.stack = Array.isArray(parsed.stack) ? parsed.stack : [];
-    state.queue = Array.isArray(parsed.queue) ? parsed.queue : [];
-    state.linked = Array.isArray(parsed.linked) ? parsed.linked : [];
+    state.stack = Array.isArray(parsed.stack) ? normalizeLinearItems(parsed.stack) : [];
+    state.queue = Array.isArray(parsed.queue) ? normalizeLinearItems(parsed.queue) : [];
+    state.linked = Array.isArray(parsed.linked) ? normalizeLinearItems(parsed.linked) : [];
     state.bst = parsed.bst || null;
     state.logs = Array.isArray(parsed.logs) ? parsed.logs.slice(0, 16) : [];
     logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
@@ -182,6 +182,22 @@ function restoreState() {
 function nextNodeId() {
   nodeCounter += 1;
   return `node-${nodeCounter}`;
+}
+
+function normalizeLinearItems(items = []) {
+  return items.map((item) => {
+    if (typeof item === 'object' && item !== null && Number.isInteger(item.value)) {
+      return {
+        id: typeof item.id === 'string' ? item.id : nextNodeId(),
+        value: item.value,
+      };
+    }
+
+    return {
+      id: nextNodeId(),
+      value: Number(item),
+    };
+  });
 }
 
 function setStatus(message) {
@@ -526,12 +542,11 @@ function renderStack() {
   }
 
   const nodes = state.stack
-    .map((value, index) => {
+    .map((item, index) => {
       const isTop = index === state.stack.length - 1;
-      const nodeKey = `stack-${index}`;
-      const activeClass = state.activeNodeId === nodeKey ? 'active' : '';
-      const foundClass = state.foundNodeId === nodeKey ? 'found' : '';
-      return `<div class="node ${isTop ? 'badge top' : ''} ${activeClass} ${foundClass}">${value}</div>`;
+      const activeClass = state.activeNodeId === item.id ? 'active' : '';
+      const foundClass = state.foundNodeId === item.id ? 'found' : '';
+      return `<div class="node ${isTop ? 'badge top' : ''} ${activeClass} ${foundClass}">${item.value}</div>`;
     })
     .reverse()
     .join('');
@@ -546,11 +561,10 @@ function renderQueue() {
   }
 
   const nodes = state.queue
-    .map((value, index) => {
-      const nodeKey = `queue-${index}`;
-      const activeClass = state.activeNodeId === nodeKey ? 'active' : '';
-      const foundClass = state.foundNodeId === nodeKey ? 'found' : '';
-      return `<div class="node ${index === 0 ? 'badge front' : ''} ${activeClass} ${foundClass}">${value}</div>`;
+    .map((item, index) => {
+      const activeClass = state.activeNodeId === item.id ? 'active' : '';
+      const foundClass = state.foundNodeId === item.id ? 'found' : '';
+      return `<div class="node ${index === 0 ? 'badge front' : ''} ${activeClass} ${foundClass}">${item.value}</div>`;
     })
     .join('');
 
@@ -564,11 +578,10 @@ function renderLinkedList() {
   }
 
   const nodes = state.linked
-    .map((value, index) => {
-      const nodeKey = `linked-${index}`;
-      const activeClass = state.activeNodeId === nodeKey ? 'active' : '';
-      const foundClass = state.foundNodeId === nodeKey ? 'found' : '';
-      return `<div class="node ${index === 0 ? 'badge list-head' : ''} ${activeClass} ${foundClass}">${value}</div>`;
+    .map((item, index) => {
+      const activeClass = state.activeNodeId === item.id ? 'active' : '';
+      const foundClass = state.foundNodeId === item.id ? 'found' : '';
+      return `<div class="node ${index === 0 ? 'badge list-head' : ''} ${activeClass} ${foundClass}">${item.value}</div>`;
     })
     .join('');
 
@@ -829,7 +842,7 @@ function handleRebalance() {
   captureSnapshot();
   state.bst = buildBalancedBST(values);
   setTraversalOutput('');
-  render();
+  renderVisualization();
   setStatus(`Rebuilt the BST into a more balanced shape across ${values.length} nodes.`);
   addLog('BST rebalanced from in-order values');
 }
@@ -845,15 +858,15 @@ function handleAdd() {
   captureSnapshot();
 
   if (state.active === 'stack') {
-    state.stack.push(value);
+    state.stack.push({ id: nextNodeId(), value });
     setStatus(`Pushed ${value} onto stack.`);
     addLog(`Stack push ${value}`);
   } else if (state.active === 'queue') {
-    state.queue.push(value);
+    state.queue.push({ id: nextNodeId(), value });
     setStatus(`Enqueued ${value}.`);
     addLog(`Queue enqueue ${value}`);
   } else if (state.active === 'linked') {
-    state.linked.push(value);
+    state.linked.push({ id: nextNodeId(), value });
     setStatus(`Appended ${value} to linked list.`);
     addLog(`Linked append ${value}`);
   } else {
@@ -884,8 +897,8 @@ function handleRemove() {
     }
 
     const removed = state.stack.pop();
-    setStatus(`Popped ${removed} from stack.`);
-    addLog(`Stack pop ${removed}`);
+    setStatus(`Popped ${removed.value} from stack.`);
+    addLog(`Stack pop ${removed.value}`);
   } else if (state.active === 'queue') {
     if (!state.queue.length) {
       setStatus('Queue is empty.');
@@ -893,8 +906,8 @@ function handleRemove() {
     }
 
     const removed = state.queue.shift();
-    setStatus(`Dequeued ${removed}.`);
-    addLog(`Queue dequeue ${removed}`);
+    setStatus(`Dequeued ${removed.value}.`);
+    addLog(`Queue dequeue ${removed.value}`);
   } else if (state.active === 'linked') {
     if (!state.linked.length) {
       setStatus('Linked list is empty.');
@@ -902,8 +915,8 @@ function handleRemove() {
     }
 
     const removed = state.linked.shift();
-    setStatus(`Removed head node (${removed}).`);
-    addLog(`Linked remove-head ${removed}`);
+    setStatus(`Removed head node (${removed.value}).`);
+    addLog(`Linked remove-head ${removed.value}`);
   } else {
     const value = parseInputValue();
     if (value === null) {
@@ -982,11 +995,11 @@ async function handleSearch() {
       return;
     }
 
-    const foundIndex = values.indexOf(value);
+    const foundItem = values.find((item) => item.value === value);
     clearHighlights();
-    if (foundIndex >= 0) {
-      state.activeNodeId = `${state.active}-${foundIndex}`;
-      state.foundNodeId = `${state.active}-${foundIndex}`;
+    if (foundItem) {
+      state.activeNodeId = foundItem.id;
+      state.foundNodeId = foundItem.id;
       setStatus(`Found ${value} in ${structureInfo[state.active].title.toLowerCase()}.`);
       addLog(`${state.active} search hit ${value}`);
     } else {
@@ -1053,15 +1066,15 @@ function handleSampleLoad() {
   traversalModeIndex = 0;
 
   if (state.active === 'stack') {
-    state.stack = [14, 27, 33, 41, 52];
+    state.stack = [14, 27, 33, 41, 52].map((value) => ({ id: nextNodeId(), value }));
     setStatus('Loaded sample stack.');
     addLog('Stack sample loaded');
   } else if (state.active === 'queue') {
-    state.queue = [11, 18, 29, 36, 45];
+    state.queue = [11, 18, 29, 36, 45].map((value) => ({ id: nextNodeId(), value }));
     setStatus('Loaded sample queue.');
     addLog('Queue sample loaded');
   } else if (state.active === 'linked') {
-    state.linked = [5, 12, 19, 28, 34];
+    state.linked = [5, 12, 19, 28, 34].map((value) => ({ id: nextNodeId(), value }));
     setStatus('Loaded sample linked list.');
     addLog('Linked list sample loaded');
   } else {
@@ -1168,9 +1181,9 @@ function importState(event) {
     try {
       const parsed = JSON.parse(String(reader.result || '{}'));
       state.active = parsed.active || 'stack';
-      state.stack = Array.isArray(parsed.stack) ? parsed.stack : [];
-      state.queue = Array.isArray(parsed.queue) ? parsed.queue : [];
-      state.linked = Array.isArray(parsed.linked) ? parsed.linked : [];
+      state.stack = Array.isArray(parsed.stack) ? normalizeLinearItems(parsed.stack) : [];
+      state.queue = Array.isArray(parsed.queue) ? normalizeLinearItems(parsed.queue) : [];
+      state.linked = Array.isArray(parsed.linked) ? normalizeLinearItems(parsed.linked) : [];
       state.bst = parsed.bst || null;
       state.logs = Array.isArray(parsed.logs) ? parsed.logs.slice(0, 16) : [];
       logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
