@@ -329,7 +329,7 @@ function summarizeBstShape() {
 
   const height = bstHeight(state.bst);
   const leaves = bstLeafCount(state.bst);
-  const balance = bstBalanceLabel(state.bst);
+  const balance = bstShapeLabel(state.bst);
 
   return {
     summary: `BST holds ${values.length} unique node${values.length === 1 ? '' : 's'} over ${height} level${height === 1 ? '' : 's'} and currently reads as ${balance.toLowerCase()}.`,
