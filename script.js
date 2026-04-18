@@ -39,6 +39,9 @@ const structureTitle = document.getElementById('structure-title');
 const structureNote = document.getElementById('structure-note');
 const snapshotSummaryEl = document.getElementById('snapshot-summary');
 const snapshotChipsEl = document.getElementById('snapshot-chips');
+const playbookTitleEl = document.getElementById('playbook-title');
+const playbookDetailEl = document.getElementById('playbook-detail');
+const playbookWatchEl = document.getElementById('playbook-watch');
 const visualArea = document.getElementById('visual-area');
 const STORAGE_KEY = 'ds_playground_html_state_v1';
 
@@ -353,6 +356,76 @@ function summarizeBstShape() {
   };
 }
 
+function buildOperationPlaybook() {
+  if (state.active === 'bst') {
+    if (!state.bst) {
+      return {
+        title: 'Seed the tree',
+        detail: 'Load the BST sample or insert a root plus two children so traversal and rebalance controls become meaningful.',
+        watch: 'Empty trees hide the real shape tradeoff, so delay discussion until there is branch structure to inspect.',
+      };
+    }
+
+    const height = bstHeight(state.bst);
+    const shape = bstShapeLabel(state.bst);
+    if (shape === 'Skewed') {
+      return {
+        title: 'Contrast search before and after rebalance',
+        detail: `This tree is ${shape.toLowerCase()} across ${height} levels. Run search once, then rebalance to show how path length changes.`,
+        watch: 'A skewed tree makes average-case lookup claims feel dishonest because the current path is closer to a linked list.',
+      };
+    }
+
+    return {
+      title: 'Pair traversal with lookup cost',
+      detail: `The current BST is ${shape.toLowerCase()}, so this is a good moment to compare search-path animation against traversal output.`,
+      watch: 'Duplicates are ignored in BST mode, so call out that shape changes only when unique values are inserted.',
+    };
+  }
+
+  const values =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.linked.map((item) => item.value);
+
+  if (!values.length) {
+    return {
+      title: 'Load a working sequence',
+      detail: 'Use the sample or a custom sequence so the structure has enough shape to talk about head/tail or top depth.',
+      watch: 'Tiny structures flatten the differences between stack, queue, and linked-list behavior.',
+    };
+  }
+
+  const duplicateShare = ((values.length - new Set(values).size) / Math.max(1, values.length)) * 100;
+  const mixedOrder =
+    !values.every((value, index) => index === 0 || value >= values[index - 1]) &&
+    !values.every((value, index) => index === 0 || value <= values[index - 1]);
+
+  if (state.active === 'stack') {
+    return {
+      title: 'Teach push and pop pressure',
+      detail: `With ${values.length} item${values.length === 1 ? '' : 's'} loaded, you can now show how the visible top changes under repeated push and pop operations.`,
+      watch: duplicateShare >= 30 ? 'Duplicate-heavy stack values make visual state changes harder to read, so narrate the top marker explicitly.' : 'Call out that only the top element is directly accessible even when the stack looks visually deep.',
+    };
+  }
+
+  if (state.active === 'queue') {
+    return {
+      title: 'Walk the service line',
+      detail: `This queue has ${values.length} visible item${values.length === 1 ? '' : 's'}, which is enough to contrast arrival order with dequeue order.`,
+      watch: mixedOrder ? 'Mixed values are fine here because queue behavior is about order of arrival, not sorted content.' : 'If the values look ordered, remind the viewer that FIFO is preserving arrival order rather than sorting.',
+    };
+  }
+
+  return {
+    title: 'Use repeated values to explain pointers',
+    detail: `The linked list currently shows ${values.length} node${values.length === 1 ? '' : 's'}, which makes head movement and repeated values easy to explain.`,
+    watch: duplicateShare >= 20 ? 'Repeated values are useful here because they show why positional traversal matters more than value uniqueness.' : 'Linked-list cost only becomes obvious when you explain that middle access still requires walking from the head.',
+  };
+}
+
 function renderStructureSnapshot() {
   if (!snapshotSummaryEl || !snapshotChipsEl) return;
 
@@ -370,6 +443,15 @@ function renderStructureSnapshot() {
   snapshotChipsEl.innerHTML = payload.chips.length
     ? payload.chips.map((chip) => `<span class="snapshot-chip">${chip}</span>`).join('')
     : '<span class="snapshot-chip">Waiting for data</span>';
+}
+
+function renderOperationPlaybook() {
+  if (!playbookTitleEl || !playbookDetailEl || !playbookWatchEl) return;
+
+  const playbook = buildOperationPlaybook();
+  playbookTitleEl.textContent = playbook.title;
+  playbookDetailEl.textContent = playbook.detail;
+  playbookWatchEl.textContent = playbook.watch;
 }
 
 function updateMetrics() {
@@ -654,6 +736,7 @@ function renderVisualization() {
     renderStack();
     updateMetrics();
     renderStructureSnapshot();
+    renderOperationPlaybook();
     return;
   }
 
@@ -661,6 +744,7 @@ function renderVisualization() {
     renderQueue();
     updateMetrics();
     renderStructureSnapshot();
+    renderOperationPlaybook();
     return;
   }
 
@@ -668,6 +752,7 @@ function renderVisualization() {
     renderLinkedList();
     updateMetrics();
     renderStructureSnapshot();
+    renderOperationPlaybook();
     persistState();
     return;
   }
@@ -675,6 +760,7 @@ function renderVisualization() {
   renderBST();
   updateMetrics();
   renderStructureSnapshot();
+  renderOperationPlaybook();
   persistState();
 }
 
