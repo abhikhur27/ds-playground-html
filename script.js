@@ -12,6 +12,7 @@ const clearBtn = document.getElementById('clear-btn');
 const undoBtn = document.getElementById('undo-btn');
 const redoBtn = document.getElementById('redo-btn');
 const shareStateBtn = document.getElementById('share-state-btn');
+const copyDemoBriefBtn = document.getElementById('copy-demo-brief-btn');
 const exportStateBtn = document.getElementById('export-state-btn');
 const importStateBtn = document.getElementById('import-state-btn');
 const importStateFile = document.getElementById('import-state-file');
@@ -1258,6 +1259,23 @@ function exportState() {
   setStatus('Exported workspace JSON.');
 }
 
+function buildDemoBrief() {
+  const playbook = buildOperationPlaybook();
+  const snapshot = snapshotSummaryEl?.textContent || 'Load or edit a structure to inspect its current posture.';
+  const chips = Array.from(snapshotChipsEl?.querySelectorAll('.snapshot-chip') || []).map((chip) => chip.textContent).join(' | ');
+  return [
+    `${structureInfo[state.active].title} Demo Brief`,
+    '',
+    `Snapshot: ${snapshot}`,
+    chips ? `Signal chips: ${chips}` : 'Signal chips: Waiting for data',
+    `Operator playbook: ${playbook.title}`,
+    playbook.detail,
+    `Watch-out: ${playbook.watch}`,
+    `Recent log head: ${state.logs[0] || 'No operations logged yet.'}`,
+    `Share link: ${window.location.href}`,
+  ].join('\n');
+}
+
 function importState(event) {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -1326,6 +1344,15 @@ shareStateBtn.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(window.location.href);
     setStatus('Share link copied with the current workspace snapshot.');
+  } catch (error) {
+    setStatus('Clipboard copy failed in this environment.');
+  }
+});
+copyDemoBriefBtn?.addEventListener('click', async () => {
+  syncUrlState();
+  try {
+    await navigator.clipboard.writeText(buildDemoBrief());
+    setStatus('Copied a demo brief with the current structure snapshot and operator playbook.');
   } catch (error) {
     setStatus('Clipboard copy failed in this environment.');
   }

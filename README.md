@@ -16,6 +16,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Operation log with timestamped actions.
 - Workspace import/export as JSON snapshots.
 - Workspace import/export now preserves linked-list state alongside stack, queue, and BST data.
+- Copy Demo Brief converts the active structure snapshot, operator playbook, and share link into a clipboard-ready walkthrough note.
 - Responsive layout and keyboard-friendly controls.
 - Undo and redo history for structural edits.
 - BST rebalance control rebuilds the current tree from its in-order values to show how shape affects lookup behavior.
