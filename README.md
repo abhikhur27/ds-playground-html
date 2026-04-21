@@ -53,6 +53,13 @@ python -m http.server 8000
 
 Open `http://localhost:8000`.
 
+## Portfolio Demo Path
+
+1. Load a sample dataset.
+2. Switch between stack, queue, linked list, and BST to show shared controls.
+3. Run search or traversal on the active structure.
+4. Copy the demo brief so the walkthrough has a portable artifact.
+
 ## GitHub Pages Compatibility
 
 - No build tooling required.

@@ -337,6 +337,19 @@ button:hover {
   font-style: italic;
 }
 
+.demo-strip {
+  margin-top: 1rem;
+  border: 1px solid rgba(20, 184, 166, 0.32);
+  border-radius: 10px;
+  background: rgba(20, 184, 166, 0.08);
+  padding: 0.8rem 1rem;
+  color: var(--muted);
+}
+
+.demo-strip strong {
+  color: var(--text);
+}
+
 .tree-svg {
   width: 100%;
   height: 100%;
