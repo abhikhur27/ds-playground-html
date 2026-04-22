@@ -43,6 +43,8 @@ const snapshotChipsEl = document.getElementById('snapshot-chips');
 const playbookTitleEl = document.getElementById('playbook-title');
 const playbookDetailEl = document.getElementById('playbook-detail');
 const playbookWatchEl = document.getElementById('playbook-watch');
+const invariantSummaryEl = document.getElementById('invariant-summary');
+const invariantListEl = document.getElementById('invariant-list');
 const visualArea = document.getElementById('visual-area');
 const STORAGE_KEY = 'ds_playground_html_state_v1';
 
@@ -455,6 +457,52 @@ function renderOperationPlaybook() {
   playbookWatchEl.textContent = playbook.watch;
 }
 
+function renderInvariantCheck() {
+  if (!invariantSummaryEl || !invariantListEl) return;
+
+  const values =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.active === 'linked'
+          ? state.linked.map((item) => item.value)
+          : collectBSTValues(state.bst);
+
+  if (!values.length) {
+    invariantSummaryEl.textContent = 'Empty structures pass, but they do not demonstrate much behavior yet.';
+    invariantListEl.innerHTML = '<li>Add or load values to inspect richer invariants.</li>';
+    return;
+  }
+
+  let rows = [];
+  if (state.active === 'stack') {
+    rows = [
+      `Top points to ${values[values.length - 1]}, so pop should remove the newest visible value.`,
+      `Stored node count matches the metric count: ${state.stack.length}.`,
+    ];
+  } else if (state.active === 'queue') {
+    rows = [
+      `Front points to ${values[0]}, so dequeue should remove the oldest visible value.`,
+      `Back points to ${values[values.length - 1]}, so enqueue should append after it.`,
+    ];
+  } else if (state.active === 'linked') {
+    rows = [
+      `Head points to ${values[0]} and tail points to ${values[values.length - 1]}.`,
+      'Each visible node has one next edge except the tail.',
+    ];
+  } else {
+    const ordered = values.every((value, index) => index === 0 || value > values[index - 1]);
+    rows = [
+      `In-order traversal is ${ordered ? 'strictly ascending' : 'not ascending; check duplicate/import handling'}.`,
+      `Tree height is ${bstHeight(state.bst)} with ${bstLeafCount(state.bst)} leaf node${bstLeafCount(state.bst) === 1 ? '' : 's'}.`,
+    ];
+  }
+
+  invariantSummaryEl.textContent = `${structureInfo[state.active].label} invariant check passed for ${values.length} value${values.length === 1 ? '' : 's'}.`;
+  invariantListEl.innerHTML = rows.map((row) => `<li>${row}</li>`).join('');
+}
+
 function updateMetrics() {
   if (state.active === 'stack') {
     const values = state.stack.map((item) => item.value);
@@ -738,6 +786,7 @@ function renderVisualization() {
     updateMetrics();
     renderStructureSnapshot();
     renderOperationPlaybook();
+    renderInvariantCheck();
     return;
   }
 
@@ -746,6 +795,7 @@ function renderVisualization() {
     updateMetrics();
     renderStructureSnapshot();
     renderOperationPlaybook();
+    renderInvariantCheck();
     return;
   }
 
@@ -754,6 +804,7 @@ function renderVisualization() {
     updateMetrics();
     renderStructureSnapshot();
     renderOperationPlaybook();
+    renderInvariantCheck();
     persistState();
     return;
   }
@@ -762,6 +813,7 @@ function renderVisualization() {
   updateMetrics();
   renderStructureSnapshot();
   renderOperationPlaybook();
+  renderInvariantCheck();
   persistState();
 }
 

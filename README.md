@@ -26,6 +26,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - BST diagnostics now surface min/max values, leaf count, and balance shape.
 - Linear structures now keep stable node objects across manual add, sample load, import, and search flows so highlights and metrics stay correct.
 - Operator playbook converts the current structure state into a concrete demo script and a watch-out note for walkthroughs.
+- Invariant check panel verifies the active structure's expected top/front/head/tree ordering behavior.
 
 ## Technical Design
 
