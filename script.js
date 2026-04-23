@@ -45,6 +45,9 @@ const playbookDetailEl = document.getElementById('playbook-detail');
 const playbookWatchEl = document.getElementById('playbook-watch');
 const invariantSummaryEl = document.getElementById('invariant-summary');
 const invariantListEl = document.getElementById('invariant-list');
+const stressTestTitleEl = document.getElementById('stress-test-title');
+const stressTestDetailEl = document.getElementById('stress-test-detail');
+const stressTestWatchEl = document.getElementById('stress-test-watch');
 const visualArea = document.getElementById('visual-area');
 const STORAGE_KEY = 'ds_playground_html_state_v1';
 
@@ -457,6 +460,76 @@ function renderOperationPlaybook() {
   playbookWatchEl.textContent = playbook.watch;
 }
 
+function buildStressTest() {
+  if (state.active === 'bst') {
+    if (!state.bst) {
+      return {
+        title: 'Seed the BST first',
+        detail: 'Load a sample tree before you search, delete, or rebalance so the viewer can actually see branch pressure.',
+        watch: 'Without at least one branch on each side, search depth and replacement behavior stay invisible.',
+      };
+    }
+
+    const values = collectBSTValues(state.bst);
+    const rootValue = state.bst.value;
+    const skewed = bstHeight(state.bst) >= Math.max(4, Math.ceil(Math.log2(Math.max(2, values.length))) + 1);
+    return {
+      title: skewed ? 'Search, then rebalance the same tree' : 'Delete the root after one guided search',
+      detail: skewed
+        ? `Search for ${values[values.length - 1]}, then rebalance to show how lookup paths shrink when the tree stops leaning.`
+        : `Search once, then delete the root (${rootValue}) so the replacement node logic becomes obvious in the visual area and log.`,
+      watch: skewed
+        ? 'Call out the before/after path length, not just the final balanced drawing.'
+        : 'Explain which successor rises into the root so delete reads like structure maintenance, not magic.',
+    };
+  }
+
+  const values =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.linked.map((item) => item.value);
+
+  if (!values.length) {
+    return {
+      title: 'Load more pressure',
+      detail: 'Use Sample or a manual sequence before stress-testing so the next operation has something meaningful to disturb.',
+      watch: 'One-node demos hide the difference between stack, queue, and linked-list behavior.',
+    };
+  }
+
+  if (state.active === 'stack') {
+    return {
+      title: 'Push one marker, then pop twice',
+      detail: `Push a new marker above ${values[values.length - 1]}, then pop twice to show that the newest frame leaves first and the older frame resurfaces.`,
+      watch: 'Keep naming the top item out loud so the LIFO rule stays concrete.',
+    };
+  }
+
+  if (state.active === 'queue') {
+    return {
+      title: 'Add urgency without skipping the line',
+      detail: `Enqueue one more item behind ${values[values.length - 1]}, then dequeue twice to prove the oldest front item still leaves first.`,
+      watch: 'Use the front/back labels when you explain why urgent work still waits in a strict FIFO queue.',
+    };
+  }
+
+  return {
+    title: 'Append tail pressure, then remove the head',
+    detail: `Append one marker after ${values[values.length - 1]}, then remove the head (${values[0]}) so the viewer sees the chain update from both ends.`,
+    watch: 'Point at the new head and unchanged tail to keep pointer movement readable.',
+  };
+}
+
+function renderStressTest() {
+  if (!stressTestTitleEl || !stressTestDetailEl || !stressTestWatchEl) return;
+  const stressTest = buildStressTest();
+  stressTestTitleEl.textContent = stressTest.title;
+  stressTestDetailEl.textContent = stressTest.detail;
+  stressTestWatchEl.textContent = stressTest.watch;
+}
+
 function renderInvariantCheck() {
   if (!invariantSummaryEl || !invariantListEl) return;
 
@@ -786,6 +859,7 @@ function renderVisualization() {
     updateMetrics();
     renderStructureSnapshot();
     renderOperationPlaybook();
+    renderStressTest();
     renderInvariantCheck();
     return;
   }
@@ -795,6 +869,7 @@ function renderVisualization() {
     updateMetrics();
     renderStructureSnapshot();
     renderOperationPlaybook();
+    renderStressTest();
     renderInvariantCheck();
     return;
   }
@@ -804,6 +879,7 @@ function renderVisualization() {
     updateMetrics();
     renderStructureSnapshot();
     renderOperationPlaybook();
+    renderStressTest();
     renderInvariantCheck();
     persistState();
     return;
@@ -813,6 +889,7 @@ function renderVisualization() {
   updateMetrics();
   renderStructureSnapshot();
   renderOperationPlaybook();
+  renderStressTest();
   renderInvariantCheck();
   persistState();
 }
@@ -1313,6 +1390,7 @@ function exportState() {
 
 function buildDemoBrief() {
   const playbook = buildOperationPlaybook();
+  const stressTest = buildStressTest();
   const snapshot = snapshotSummaryEl?.textContent || 'Load or edit a structure to inspect its current posture.';
   const chips = Array.from(snapshotChipsEl?.querySelectorAll('.snapshot-chip') || []).map((chip) => chip.textContent).join(' | ');
   return [
@@ -1323,6 +1401,9 @@ function buildDemoBrief() {
     `Operator playbook: ${playbook.title}`,
     playbook.detail,
     `Watch-out: ${playbook.watch}`,
+    `Stress test: ${stressTest.title}`,
+    stressTest.detail,
+    `Stress-test watch-out: ${stressTest.watch}`,
     `Recent log head: ${state.logs[0] || 'No operations logged yet.'}`,
     `Share link: ${window.location.href}`,
   ].join('\n');

@@ -27,6 +27,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Linear structures now keep stable node objects across manual add, sample load, import, and search flows so highlights and metrics stay correct.
 - Operator playbook converts the current structure state into a concrete demo script and a watch-out note for walkthroughs.
 - Invariant check panel verifies the active structure's expected top/front/head/tree ordering behavior.
+- Stress test panel suggests the next add/remove/rebalance move that best exposes the active structure's behavior.
 
 ## Technical Design
 
@@ -60,6 +61,7 @@ Open `http://localhost:8000`.
 2. Switch between stack, queue, linked list, and BST to show shared controls.
 3. Run search or traversal on the active structure.
 4. Copy the demo brief so the walkthrough has a portable artifact.
+5. Use the Stress Test panel to stage a more revealing follow-up move after the first walkthrough.
 
 ## GitHub Pages Compatibility
 
