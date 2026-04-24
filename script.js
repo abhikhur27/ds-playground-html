@@ -1457,6 +1457,11 @@ function setActiveTab(tab) {
   setStatus(`${structureInfo[tab].title} selected.`);
 }
 
+function isEditableTarget(target) {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+}
+
 tabs.forEach((button) => {
   button.addEventListener('click', () => setActiveTab(button.dataset.tab));
 });
@@ -1498,6 +1503,37 @@ sampleBtn.addEventListener('click', handleSampleLoad);
 valueInput.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
     handleAdd();
+  }
+});
+
+sequenceInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' && event.shiftKey) {
+    event.preventDefault();
+    handleLoadSequence();
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || isEditableTarget(event.target)) {
+    return;
+  }
+
+  if (['1', '2', '3', '4'].includes(event.key)) {
+    event.preventDefault();
+    const nextTab = ['stack', 'queue', 'linked', 'bst'][Number(event.key) - 1];
+    setActiveTab(nextTab);
+    return;
+  }
+
+  if (event.key.toLowerCase() === 'z') {
+    event.preventDefault();
+    handleUndo();
+    return;
+  }
+
+  if (event.key.toLowerCase() === 'y') {
+    event.preventDefault();
+    handleRedo();
   }
 });
 
