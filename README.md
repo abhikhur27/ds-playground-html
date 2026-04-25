@@ -25,6 +25,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Active-structure metric cards now switch between linear snapshots (top/front/head, range, duplicates) and BST diagnostics.
 - BST diagnostics now surface min/max values, leaf count, and balance shape.
 - Linear structures now keep stable node objects across manual add, sample load, import, and search flows so highlights and metrics stay correct.
+- Next move preview explains what the next add/remove/search action would do before you commit it.
 - Operator playbook converts the current structure state into a concrete demo script and a watch-out note for walkthroughs.
 - Invariant check panel verifies the active structure's expected top/front/head/tree ordering behavior.
 - Stress test panel suggests the next add/remove/rebalance move that best exposes the active structure's behavior.

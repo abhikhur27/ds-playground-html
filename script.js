@@ -40,6 +40,8 @@ const structureTitle = document.getElementById('structure-title');
 const structureNote = document.getElementById('structure-note');
 const snapshotSummaryEl = document.getElementById('snapshot-summary');
 const snapshotChipsEl = document.getElementById('snapshot-chips');
+const operationPreviewTitleEl = document.getElementById('operation-preview-title');
+const operationPreviewDetailEl = document.getElementById('operation-preview-detail');
 const playbookTitleEl = document.getElementById('playbook-title');
 const playbookDetailEl = document.getElementById('playbook-detail');
 const playbookWatchEl = document.getElementById('playbook-watch');
@@ -451,6 +453,100 @@ function renderStructureSnapshot() {
     : '<span class="snapshot-chip">Waiting for data</span>';
 }
 
+function renderOperationPreview() {
+  if (!operationPreviewTitleEl || !operationPreviewDetailEl) return;
+
+  const parsed = parseInteger(valueInput.value);
+  const values =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.active === 'linked'
+          ? state.linked.map((item) => item.value)
+          : [];
+
+  if (state.active === 'bst') {
+    operationPreviewTitleEl.textContent = 'BST Preview';
+
+    if (!state.bst) {
+      operationPreviewDetailEl.textContent = parsed === null
+        ? 'Enter an integer to preview the first insert or search path.'
+        : `Inserting ${parsed} would create the root and make the first branch decision trivial.`;
+      return;
+    }
+
+    if (parsed === null) {
+      operationPreviewDetailEl.textContent = 'Enter an integer to preview the next insert or search path through the current tree.';
+      return;
+    }
+
+    const visited = [];
+    let current = state.bst;
+    let verdict = `Insert ${parsed} as a new leaf.`;
+
+    while (current) {
+      visited.push(current.value);
+      if (parsed === current.value) {
+        verdict = `${parsed} already exists, so search would hit immediately and insert would be ignored.`;
+        break;
+      }
+
+      if (parsed < current.value) {
+        if (!current.left) {
+          verdict = `Insert ${parsed} as the left child of ${current.value}.`;
+          break;
+        }
+        current = current.left;
+      } else {
+        if (!current.right) {
+          verdict = `Insert ${parsed} as the right child of ${current.value}.`;
+          break;
+        }
+        current = current.right;
+      }
+    }
+
+    operationPreviewDetailEl.textContent = `Search path would read ${visited.join(' -> ')}. ${verdict}`;
+    return;
+  }
+
+  operationPreviewTitleEl.textContent = 'Next Move Preview';
+
+  if (!values.length) {
+    operationPreviewDetailEl.textContent = parsed === null
+      ? 'Enter an integer or load a sample to preview the next structural move.'
+      : state.active === 'stack'
+        ? `Push ${parsed} to create the first stack frame.`
+        : state.active === 'queue'
+          ? `Enqueue ${parsed} to start a visible service line.`
+          : `Append ${parsed} to create the head and tail of the list.`;
+    return;
+  }
+
+  if (parsed === null) {
+    const removal = state.active === 'stack'
+      ? `Pop would remove ${values[values.length - 1]} next.`
+      : state.active === 'queue'
+        ? `Dequeue would remove ${values[0]} next.`
+        : `Remove Head would drop ${values[0]} next.`;
+    operationPreviewDetailEl.textContent = `${removal} Enter an integer to preview the next add operation too.`;
+    return;
+  }
+
+  if (state.active === 'stack') {
+    operationPreviewDetailEl.textContent = `Push ${parsed} above ${values[values.length - 1]}. A follow-up pop would immediately reveal ${values[values.length - 1]} again.`;
+    return;
+  }
+
+  if (state.active === 'queue') {
+    operationPreviewDetailEl.textContent = `Enqueue ${parsed} behind ${values[values.length - 1]}, while the next dequeue still removes ${values[0]} first.`;
+    return;
+  }
+
+  operationPreviewDetailEl.textContent = `Append ${parsed} after tail ${values[values.length - 1]}; removing head would still detach ${values[0]} first.`;
+}
+
 function renderOperationPlaybook() {
   if (!playbookTitleEl || !playbookDetailEl || !playbookWatchEl) return;
 
@@ -858,6 +954,7 @@ function renderVisualization() {
     renderStack();
     updateMetrics();
     renderStructureSnapshot();
+    renderOperationPreview();
     renderOperationPlaybook();
     renderStressTest();
     renderInvariantCheck();
@@ -868,6 +965,7 @@ function renderVisualization() {
     renderQueue();
     updateMetrics();
     renderStructureSnapshot();
+    renderOperationPreview();
     renderOperationPlaybook();
     renderStressTest();
     renderInvariantCheck();
@@ -878,6 +976,7 @@ function renderVisualization() {
     renderLinkedList();
     updateMetrics();
     renderStructureSnapshot();
+    renderOperationPreview();
     renderOperationPlaybook();
     renderStressTest();
     renderInvariantCheck();
@@ -888,6 +987,7 @@ function renderVisualization() {
   renderBST();
   updateMetrics();
   renderStructureSnapshot();
+  renderOperationPreview();
   renderOperationPlaybook();
   renderStressTest();
   renderInvariantCheck();
@@ -1500,6 +1600,7 @@ importStateFile.addEventListener('change', importState);
 exportLogBtn.addEventListener('click', exportLog);
 sampleBtn.addEventListener('click', handleSampleLoad);
 
+valueInput.addEventListener('input', renderOperationPreview);
 valueInput.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
     handleAdd();
