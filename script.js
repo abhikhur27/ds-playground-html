@@ -42,6 +42,9 @@ const snapshotSummaryEl = document.getElementById('snapshot-summary');
 const snapshotChipsEl = document.getElementById('snapshot-chips');
 const operationPreviewTitleEl = document.getElementById('operation-preview-title');
 const operationPreviewDetailEl = document.getElementById('operation-preview-detail');
+const challengeObjectiveTitleEl = document.getElementById('challenge-objective-title');
+const challengeObjectiveDetailEl = document.getElementById('challenge-objective-detail');
+const challengeObjectiveStatusEl = document.getElementById('challenge-objective-status');
 const playbookTitleEl = document.getElementById('playbook-title');
 const playbookDetailEl = document.getElementById('playbook-detail');
 const playbookWatchEl = document.getElementById('playbook-watch');
@@ -556,6 +559,70 @@ function renderOperationPlaybook() {
   playbookWatchEl.textContent = playbook.watch;
 }
 
+function renderChallengeObjective() {
+  if (!challengeObjectiveTitleEl || !challengeObjectiveDetailEl || !challengeObjectiveStatusEl) return;
+
+  if (state.active === 'bst') {
+    const count = countBSTNodes(state.bst);
+    const balanced = state.bst ? bstShapeLabel(state.bst) === 'Balanced' : false;
+    challengeObjectiveTitleEl.textContent = balanced ? 'Balanced search tree ready' : 'Build a before/after BST story';
+    challengeObjectiveDetailEl.textContent = !state.bst
+      ? 'Load Sample or Load Challenge, then search once so the tree has enough structure to compare path length and shape.'
+      : balanced
+        ? `The BST already has ${count} nodes in a balanced posture. Search, then explain how rebalancing preserved sorted order while shrinking path depth.`
+        : `This BST has ${count} nodes and still leans ${bstShapeLabel(state.bst).toLowerCase()}. Search once, then rebalance to create a clear before/after lookup comparison.`;
+    challengeObjectiveStatusEl.textContent = count >= 6
+      ? 'Status: ready for a portfolio walkthrough.'
+      : 'Status: add a few more BST nodes before the demo.';
+    return;
+  }
+
+  const values =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.linked.map((item) => item.value);
+
+  if (!values.length) {
+    challengeObjectiveTitleEl.textContent = 'Seed a non-trivial structure';
+    challengeObjectiveDetailEl.textContent = 'Load Sample or Load Challenge before demoing so add/remove order has real stakes instead of a one-node toy example.';
+    challengeObjectiveStatusEl.textContent = 'Status: one setup move needed.';
+    return;
+  }
+
+  if (state.active === 'stack') {
+    challengeObjectiveTitleEl.textContent = values.length >= 5 ? 'LIFO challenge ready' : 'Deepen the stack';
+    challengeObjectiveDetailEl.textContent = values.length >= 5
+      ? `The stack is deep enough to show frame churn. Push one marker above ${values[values.length - 1]}, then pop twice so the resurfacing frame is obvious.`
+      : `Add ${5 - values.length} more stack item${5 - values.length === 1 ? '' : 's'} so the pop order becomes visually persuasive.`;
+    challengeObjectiveStatusEl.textContent = values.length >= 5
+      ? 'Status: ready for a portfolio walkthrough.'
+      : 'Status: one more setup move recommended before the demo.';
+    return;
+  }
+
+  if (state.active === 'queue') {
+    challengeObjectiveTitleEl.textContent = values.length >= 5 ? 'FIFO pressure line ready' : 'Grow the service line';
+    challengeObjectiveDetailEl.textContent = values.length >= 5
+      ? `The queue already reads like a real service line. Enqueue one item behind ${values[values.length - 1]}, then dequeue twice to prove arrival order still wins.`
+      : `Add ${5 - values.length} more queue item${5 - values.length === 1 ? '' : 's'} so front-vs-back behavior is easier to narrate.`;
+    challengeObjectiveStatusEl.textContent = values.length >= 5
+      ? 'Status: ready for a portfolio walkthrough.'
+      : 'Status: one more setup move recommended before the demo.';
+    return;
+  }
+
+  const duplicateCount = values.length - new Set(values).size;
+  challengeObjectiveTitleEl.textContent = duplicateCount > 0 ? 'Linked-list pointer story ready' : 'Create repeated nodes';
+  challengeObjectiveDetailEl.textContent = duplicateCount > 0
+    ? `The list already includes ${duplicateCount} repeated value${duplicateCount === 1 ? '' : 's'}, which makes head movement and positional traversal easier to explain.`
+    : 'Add one repeated value to the linked list so you can explain why pointer position still matters even when values are not unique.';
+  challengeObjectiveStatusEl.textContent = values.length >= 5 && duplicateCount > 0
+    ? 'Status: ready for a portfolio walkthrough.'
+    : 'Status: add depth or a repeated node before the demo.';
+}
+
 function buildStressTest() {
   if (state.active === 'bst') {
     if (!state.bst) {
@@ -955,6 +1022,7 @@ function renderVisualization() {
     updateMetrics();
     renderStructureSnapshot();
     renderOperationPreview();
+    renderChallengeObjective();
     renderOperationPlaybook();
     renderStressTest();
     renderInvariantCheck();
@@ -966,6 +1034,7 @@ function renderVisualization() {
     updateMetrics();
     renderStructureSnapshot();
     renderOperationPreview();
+    renderChallengeObjective();
     renderOperationPlaybook();
     renderStressTest();
     renderInvariantCheck();
@@ -977,6 +1046,7 @@ function renderVisualization() {
     updateMetrics();
     renderStructureSnapshot();
     renderOperationPreview();
+    renderChallengeObjective();
     renderOperationPlaybook();
     renderStressTest();
     renderInvariantCheck();
@@ -988,6 +1058,7 @@ function renderVisualization() {
   updateMetrics();
   renderStructureSnapshot();
   renderOperationPreview();
+  renderChallengeObjective();
   renderOperationPlaybook();
   renderStressTest();
   renderInvariantCheck();
