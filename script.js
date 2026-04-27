@@ -45,6 +45,9 @@ const operationPreviewDetailEl = document.getElementById('operation-preview-deta
 const challengeObjectiveTitleEl = document.getElementById('challenge-objective-title');
 const challengeObjectiveDetailEl = document.getElementById('challenge-objective-detail');
 const challengeObjectiveStatusEl = document.getElementById('challenge-objective-status');
+const demoReadinessSummaryEl = document.getElementById('demo-readiness-summary');
+const demoReadinessScoreEl = document.getElementById('demo-readiness-score');
+const demoReadinessListEl = document.getElementById('demo-readiness-list');
 const playbookTitleEl = document.getElementById('playbook-title');
 const playbookDetailEl = document.getElementById('playbook-detail');
 const playbookWatchEl = document.getElementById('playbook-watch');
@@ -693,6 +696,90 @@ function renderStressTest() {
   stressTestWatchEl.textContent = stressTest.watch;
 }
 
+function renderDemoReadiness() {
+  if (!demoReadinessSummaryEl || !demoReadinessScoreEl || !demoReadinessListEl) return;
+
+  let rows = [];
+  if (state.active === 'bst') {
+    const nodeCount = countBSTNodes(state.bst);
+    const height = bstHeight(state.bst);
+    const shape = bstShapeLabel(state.bst);
+    rows = [
+      {
+        label: 'Tree depth',
+        passed: nodeCount >= 6 && height >= 3,
+        detail:
+          nodeCount >= 6 && height >= 3
+            ? `Tree depth is ${height} across ${nodeCount} nodes, so lookup paths are visible.`
+            : 'Grow the tree to at least 6 nodes with height 3 so search and rebalance have visible stakes.',
+      },
+      {
+        label: 'Contrast move',
+        passed: Boolean(state.bst) && nodeCount >= 5,
+        detail: state.bst
+          ? `A ${shape.toLowerCase()} tree gives you a clear search-then-rebalance contrast.`
+          : 'Load or build a tree first so there is a search path to narrate.',
+      },
+      {
+        label: 'Walkthrough posture',
+        passed: nodeCount >= 6,
+        detail:
+          nodeCount >= 6
+            ? 'The current BST already clears the baseline for a portfolio walkthrough.'
+            : 'Add a few more nodes before trying to sell the BST as a full demo.',
+      },
+    ];
+  } else {
+    const values =
+      state.active === 'stack'
+        ? state.stack.map((item) => item.value)
+        : state.active === 'queue'
+          ? state.queue.map((item) => item.value)
+          : state.linked.map((item) => item.value);
+    const spread = values.length ? Math.max(...values) - Math.min(...values) : 0;
+    const duplicates = new Set(values).size !== values.length;
+    rows = [
+      {
+        label: 'Visible depth',
+        passed: values.length >= 5,
+        detail:
+          values.length >= 5
+            ? `${values.length} values are on screen, so order behavior is readable.`
+            : `Add ${5 - values.length} more value${5 - values.length === 1 ? '' : 's'} so the structure is more than a toy example.`,
+      },
+      {
+        label: 'Edge contrast',
+        passed: values.length >= 3,
+        detail:
+          values.length >= 3
+            ? 'There is enough material to narrate top/front/head behavior before and after a removal.'
+            : 'Load at least three values so add/remove operations visibly change the exposed edge.',
+      },
+      {
+        label: 'Pressure signal',
+        passed: spread >= 4 || duplicates,
+        detail:
+          spread >= 4 || duplicates
+            ? 'The current values already create variation or duplication worth calling out in the demo.'
+            : 'Add a wider-spread or duplicate value so the walkthrough can talk about pressure instead of only order.',
+      },
+    ];
+  }
+
+  const passed = rows.filter((row) => row.passed).length;
+  const score = Math.round((passed / rows.length) * 100);
+  demoReadinessSummaryEl.textContent =
+    passed === rows.length
+      ? state.active === 'bst'
+        ? 'BST story is demo-ready.'
+        : 'Linear structure is demo-ready.'
+      : `${rows.length - passed} more setup cue${rows.length - passed === 1 ? '' : 's'} would strengthen this walkthrough.`;
+  demoReadinessScoreEl.textContent = `Readiness score: ${score}%`;
+  demoReadinessListEl.innerHTML = rows
+    .map((row) => `<li><strong>${row.passed ? 'Ready' : 'Missing'} | ${row.label}:</strong> ${row.detail}</li>`)
+    .join('');
+}
+
 function renderInvariantCheck() {
   if (!invariantSummaryEl || !invariantListEl) return;
 
@@ -1023,6 +1110,7 @@ function renderVisualization() {
     renderStructureSnapshot();
     renderOperationPreview();
     renderChallengeObjective();
+    renderDemoReadiness();
     renderOperationPlaybook();
     renderStressTest();
     renderInvariantCheck();
@@ -1035,6 +1123,7 @@ function renderVisualization() {
     renderStructureSnapshot();
     renderOperationPreview();
     renderChallengeObjective();
+    renderDemoReadiness();
     renderOperationPlaybook();
     renderStressTest();
     renderInvariantCheck();
@@ -1047,6 +1136,7 @@ function renderVisualization() {
     renderStructureSnapshot();
     renderOperationPreview();
     renderChallengeObjective();
+    renderDemoReadiness();
     renderOperationPlaybook();
     renderStressTest();
     renderInvariantCheck();
@@ -1059,6 +1149,7 @@ function renderVisualization() {
   renderStructureSnapshot();
   renderOperationPreview();
   renderChallengeObjective();
+  renderDemoReadiness();
   renderOperationPlaybook();
   renderStressTest();
   renderInvariantCheck();
