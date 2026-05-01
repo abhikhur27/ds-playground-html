@@ -33,6 +33,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Next move preview explains what the next add/remove/search action would do before you commit it.
 - Challenge objective panel tells you when the current structure is actually rich enough for a portfolio-quality walkthrough and what setup move is still missing.
 - Operator playbook converts the current structure state into a concrete demo script and a watch-out note for walkthroughs.
+- Structure switchboard tells you when the current workload would actually teach better as a different data structure.
 - Invariant check panel verifies the active structure's expected top/front/head/tree ordering behavior.
 - Stress test panel suggests the next add/remove/rebalance move that best exposes the active structure's behavior.
 

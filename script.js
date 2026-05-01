@@ -52,6 +52,9 @@ const demoReadinessListEl = document.getElementById('demo-readiness-list');
 const playbookTitleEl = document.getElementById('playbook-title');
 const playbookDetailEl = document.getElementById('playbook-detail');
 const playbookWatchEl = document.getElementById('playbook-watch');
+const switchboardTitleEl = document.getElementById('switchboard-title');
+const switchboardDetailEl = document.getElementById('switchboard-detail');
+const switchboardWatchEl = document.getElementById('switchboard-watch');
 const invariantSummaryEl = document.getElementById('invariant-summary');
 const invariantListEl = document.getElementById('invariant-list');
 const stressTestTitleEl = document.getElementById('stress-test-title');
@@ -561,6 +564,59 @@ function renderOperationPlaybook() {
   playbookTitleEl.textContent = playbook.title;
   playbookDetailEl.textContent = playbook.detail;
   playbookWatchEl.textContent = playbook.watch;
+}
+
+function renderStructureSwitchboard() {
+  if (!switchboardTitleEl || !switchboardDetailEl || !switchboardWatchEl) return;
+
+  const linearValues =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.active === 'linked'
+          ? state.linked.map((item) => item.value)
+          : collectBSTValues(state.bst);
+
+  if (!linearValues.length) {
+    switchboardTitleEl.textContent = 'Seed a richer workload first';
+    switchboardDetailEl.textContent = 'Structure switching only becomes interesting once the current values create visible order, depth, or duplicates.';
+    switchboardWatchEl.textContent = 'Load Sample or Load Challenge before asking whether another structure would teach the same data better.';
+    return;
+  }
+
+  if (state.active === 'stack') {
+    switchboardTitleEl.textContent = linearValues.length >= 5 ? 'Stay with stack unless service order matters' : 'Deepen the stack first';
+    switchboardDetailEl.textContent = linearValues.length >= 5
+      ? 'This workload already explains resurfacing frames well. Switch to Queue only if you want the same values to read as arrival-order fairness instead.'
+      : 'Add a few more values before deciding whether stack or queue makes the stronger ordering story.';
+    switchboardWatchEl.textContent = 'If the audience keeps asking who waited longest, you chose the wrong structure for the story.';
+    return;
+  }
+
+  if (state.active === 'queue') {
+    switchboardTitleEl.textContent = 'Queue is best when fairness beats urgency';
+    switchboardDetailEl.textContent = 'Switch to Stack if you want to emphasize newest-first undo behavior, or to BST if lookup speed matters more than service order.';
+    switchboardWatchEl.textContent = 'Once the demo starts talking about search or branching, the queue has stopped being the right visual model.';
+    return;
+  }
+
+  if (state.active === 'linked') {
+    const duplicateCount = linearValues.length - new Set(linearValues).size;
+    switchboardTitleEl.textContent = duplicateCount > 0 ? 'Linked list earns its keep here' : 'Consider queue or stack for simpler order stories';
+    switchboardDetailEl.textContent = duplicateCount > 0
+      ? 'Repeated values make pointer position matter, so linked list is the clearest choice for this dataset.'
+      : 'Without duplicate pressure or pointer narration, the same values may read more clearly as a stack or queue.';
+    switchboardWatchEl.textContent = 'If node identity does not matter, do not force the audience to care about links.';
+    return;
+  }
+
+  const height = bstHeight(state.bst);
+  switchboardTitleEl.textContent = height >= 3 ? 'BST is the right pick when search path matters' : 'Grow the tree or use a linear structure instead';
+  switchboardDetailEl.textContent = height >= 3
+    ? 'The current tree has enough branching to justify BST-specific search, delete, and rebalance stories.'
+    : 'This tree is too shallow to pay off branching logic. Use stack or queue if order is the real lesson, or add more nodes first.';
+  switchboardWatchEl.textContent = 'If the tree never branches in a meaningful way, the visual complexity is not earning its place.';
 }
 
 function renderChallengeObjective() {
@@ -1113,6 +1169,7 @@ function renderVisualization() {
     renderChallengeObjective();
     renderDemoReadiness();
     renderOperationPlaybook();
+    renderStructureSwitchboard();
     renderStressTest();
     renderInvariantCheck();
     return;
@@ -1126,6 +1183,7 @@ function renderVisualization() {
     renderChallengeObjective();
     renderDemoReadiness();
     renderOperationPlaybook();
+    renderStructureSwitchboard();
     renderStressTest();
     renderInvariantCheck();
     return;
@@ -1139,6 +1197,7 @@ function renderVisualization() {
     renderChallengeObjective();
     renderDemoReadiness();
     renderOperationPlaybook();
+    renderStructureSwitchboard();
     renderStressTest();
     renderInvariantCheck();
     persistState();
@@ -1152,6 +1211,7 @@ function renderVisualization() {
   renderChallengeObjective();
   renderDemoReadiness();
   renderOperationPlaybook();
+  renderStructureSwitchboard();
   renderStressTest();
   renderInvariantCheck();
   persistState();
