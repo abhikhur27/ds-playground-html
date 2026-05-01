@@ -18,6 +18,7 @@ const importStateBtn = document.getElementById('import-state-btn');
 const importStateFile = document.getElementById('import-state-file');
 const exportLogBtn = document.getElementById('export-log-btn');
 const sampleBtn = document.getElementById('sample-btn');
+const challengeBtn = document.getElementById('challenge-btn');
 const statusEl = document.getElementById('status');
 const traversalOutputEl = document.getElementById('traversal-output');
 const metricSizeEl = document.getElementById('metric-size');
@@ -1569,6 +1570,38 @@ function handleSampleLoad() {
   renderVisualization();
 }
 
+function handleChallengeLoad() {
+  captureSnapshot();
+  clearHighlights();
+  setTraversalOutput('');
+  traversalModeIndex = 0;
+
+  if (state.active === 'stack') {
+    state.stack = [13, 21, 21, 34, 55, 89].map((value) => ({ id: nextNodeId(), value }));
+    setStatus('Loaded challenge stack with repeated top pressure.');
+    addLog('Stack challenge loaded');
+  } else if (state.active === 'queue') {
+    state.queue = [42, 18, 18, 7, 63, 90].map((value) => ({ id: nextNodeId(), value }));
+    setStatus('Loaded challenge queue with mixed arrivals and repeated values.');
+    addLog('Queue challenge loaded');
+  } else if (state.active === 'linked') {
+    state.linked = [11, 14, 14, 23, 31, 31].map((value) => ({ id: nextNodeId(), value }));
+    setStatus('Loaded challenge linked list with repeated nodes for head-removal demos.');
+    addLog('Linked list challenge loaded');
+  } else {
+    const sample = [52, 24, 16, 12, 19, 68, 61, 74, 79];
+    state.bst = null;
+    sample.forEach((value) => {
+      const result = insertBST(state.bst, value);
+      state.bst = result.node;
+    });
+    setStatus('Loaded challenge BST with an intentionally leaning search path.');
+    addLog('BST challenge loaded');
+  }
+
+  renderVisualization();
+}
+
 function handleUndo() {
   if (!historyStack.length) {
     setStatus('Nothing to undo yet.');
@@ -1761,6 +1794,7 @@ importStateBtn.addEventListener('click', () => importStateFile.click());
 importStateFile.addEventListener('change', importState);
 exportLogBtn.addEventListener('click', exportLog);
 sampleBtn.addEventListener('click', handleSampleLoad);
+challengeBtn.addEventListener('click', handleChallengeLoad);
 
 valueInput.addEventListener('input', renderOperationPreview);
 valueInput.addEventListener('keydown', (event) => {
@@ -1785,6 +1819,12 @@ document.addEventListener('keydown', (event) => {
     event.preventDefault();
     const nextTab = ['stack', 'queue', 'linked', 'bst'][Number(event.key) - 1];
     setActiveTab(nextTab);
+    return;
+  }
+
+  if (event.key === '5') {
+    event.preventDefault();
+    handleChallengeLoad();
     return;
   }
 
