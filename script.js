@@ -155,9 +155,30 @@ function currentWorkspaceSnapshot() {
   };
 }
 
+function encodeWorkspaceSnapshot(snapshot) {
+  const json = JSON.stringify(snapshot);
+  return btoa(unescape(encodeURIComponent(json)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/g, '');
+}
+
+function decodeWorkspaceSnapshot(raw) {
+  if (!raw) return null;
+
+  try {
+    const normalized = raw.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
+    const json = decodeURIComponent(escape(atob(padded)));
+    return JSON.parse(json);
+  } catch (error) {
+    return null;
+  }
+}
+
 function syncUrlState() {
   const params = new URLSearchParams(window.location.search);
-  params.set('workspace', encodeURIComponent(JSON.stringify(currentWorkspaceSnapshot())));
+  params.set('workspace', encodeWorkspaceSnapshot(currentWorkspaceSnapshot()));
   const nextUrl = `${window.location.pathname}?${params.toString()}`;
   window.history.replaceState({}, '', nextUrl);
 }
@@ -168,7 +189,8 @@ function hydrateFromUrlState() {
   if (!raw) return false;
 
   try {
-    const parsed = JSON.parse(decodeURIComponent(raw));
+    const parsed = decodeWorkspaceSnapshot(raw);
+    if (!parsed) return false;
     state.active = parsed.active || 'stack';
     state.stack = Array.isArray(parsed.stack) ? normalizeLinearItems(parsed.stack) : [];
     state.queue = Array.isArray(parsed.queue) ? normalizeLinearItems(parsed.queue) : [];
