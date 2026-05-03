@@ -60,6 +60,9 @@ const invariantListEl = document.getElementById('invariant-list');
 const stressTestTitleEl = document.getElementById('stress-test-title');
 const stressTestDetailEl = document.getElementById('stress-test-detail');
 const stressTestWatchEl = document.getElementById('stress-test-watch');
+const handoffTitleEl = document.getElementById('handoff-title');
+const handoffDetailEl = document.getElementById('handoff-detail');
+const handoffWatchEl = document.getElementById('handoff-watch');
 const visualArea = document.getElementById('visual-area');
 const STORAGE_KEY = 'ds_playground_html_state_v1';
 
@@ -775,6 +778,56 @@ function renderStressTest() {
   stressTestWatchEl.textContent = stressTest.watch;
 }
 
+function renderStudyHandoff() {
+  if (!handoffTitleEl || !handoffDetailEl || !handoffWatchEl) return;
+
+  if (state.active === 'bst') {
+    const count = countBSTNodes(state.bst);
+    if (!count) {
+      handoffTitleEl.textContent = 'Seed the BST before handing it off';
+      handoffDetailEl.textContent = 'Load a sample tree first so the recap can describe search depth, shape, and one concrete contrast move.';
+      handoffWatchEl.textContent = 'A study handoff is only useful once the tree has a visible path or rebalance story.';
+      return;
+    }
+
+    handoffTitleEl.textContent = `BST handoff: ${count} nodes, ${bstShapeLabel(state.bst).toLowerCase()} shape`;
+    handoffDetailEl.textContent = `Recap the current search posture, then ${bstHeight(state.bst) >= 4 ? 'search the deepest visible value and rebalance' : `delete root ${state.bst.value} after one search`} to make the structural payoff visible fast.`;
+    handoffWatchEl.textContent = 'Name the before/after path length explicitly so the viewer hears why this tree shape matters.';
+    return;
+  }
+
+  const values =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.linked.map((item) => item.value);
+
+  if (!values.length) {
+    handoffTitleEl.textContent = 'Build one non-trivial example first';
+    handoffDetailEl.textContent = 'Load Sample or Challenge before handing the structure off so the recap has real order, not a toy one-node state.';
+    handoffWatchEl.textContent = 'The handoff becomes useful only once the next removal teaches something visible.';
+    return;
+  }
+
+  const summary =
+    state.active === 'stack'
+      ? `top ${values[values.length - 1]} over base ${values[0]}`
+      : state.active === 'queue'
+        ? `front ${values[0]} with tail ${values[values.length - 1]}`
+        : `head ${values[0]} with tail ${values[values.length - 1]}`;
+  const nextMove =
+    state.active === 'stack'
+      ? 'push one marker, then pop twice'
+      : state.active === 'queue'
+        ? 'enqueue once, then dequeue twice'
+        : 'append once, then remove the head';
+
+  handoffTitleEl.textContent = `${structureInfo[state.active].title} handoff: ${values.length} nodes, ${summary}`;
+  handoffDetailEl.textContent = `Recap the current order, then ${nextMove} so the audience sees the rule before you switch structures or export the demo brief.`;
+  handoffWatchEl.textContent = 'Keep the explanation anchored on which item leaves next; that is the whole behavioral point of the structure.';
+}
+
 function renderDemoReadiness() {
   if (!demoReadinessSummaryEl || !demoReadinessScoreEl || !demoReadinessListEl) return;
 
@@ -1235,6 +1288,7 @@ function renderVisualization() {
   renderOperationPlaybook();
   renderStructureSwitchboard();
   renderStressTest();
+  renderStudyHandoff();
   renderInvariantCheck();
   persistState();
 }

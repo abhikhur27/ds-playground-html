@@ -36,6 +36,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Structure switchboard tells you when the current workload would actually teach better as a different data structure.
 - Invariant check panel verifies the active structure's expected top/front/head/tree ordering behavior.
 - Stress test panel suggests the next add/remove/rebalance move that best exposes the active structure's behavior.
+- Study handoff panel turns the active state into a one-minute recap plus the next move worth showing in a walkthrough.
 
 ## Technical Design
 
