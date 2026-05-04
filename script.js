@@ -63,6 +63,9 @@ const stressTestWatchEl = document.getElementById('stress-test-watch');
 const handoffTitleEl = document.getElementById('handoff-title');
 const handoffDetailEl = document.getElementById('handoff-detail');
 const handoffWatchEl = document.getElementById('handoff-watch');
+const lookupContrastTitleEl = document.getElementById('lookup-contrast-title');
+const lookupContrastDetailEl = document.getElementById('lookup-contrast-detail');
+const lookupContrastWatchEl = document.getElementById('lookup-contrast-watch');
 const visualArea = document.getElementById('visual-area');
 const STORAGE_KEY = 'ds_playground_html_state_v1';
 
@@ -828,6 +831,52 @@ function renderStudyHandoff() {
   handoffWatchEl.textContent = 'Keep the explanation anchored on which item leaves next; that is the whole behavioral point of the structure.';
 }
 
+function renderLookupContrast() {
+  if (!lookupContrastTitleEl || !lookupContrastDetailEl || !lookupContrastWatchEl) return;
+
+  const linearValues =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.active === 'linked'
+          ? state.linked.map((item) => item.value)
+          : collectBSTValues(state.bst);
+
+  if (!linearValues.length) {
+    lookupContrastTitleEl.textContent = 'Build a workload first';
+    lookupContrastDetailEl.textContent = 'Search contrast only becomes useful once the current values create visible depth or branch shape.';
+    lookupContrastWatchEl.textContent = 'Load Sample or Load Challenge before comparing lookup posture across structures.';
+    return;
+  }
+
+  const n = linearValues.length;
+  const bstLevels = state.bst ? bstHeight(state.bst) : Math.max(1, Math.ceil(Math.log2(n + 1)));
+
+  if (state.active === 'bst') {
+    lookupContrastTitleEl.textContent = bstLevels >= 4 ? 'BST is earning the lookup story' : 'BST search is still shallow';
+    lookupContrastDetailEl.textContent = bstLevels >= 4
+      ? `Current lookup depth is about ${bstLevels} levels instead of walking all ${n} values linearly. This workload finally benefits from branching.`
+      : `The current tree is only ${bstLevels} levels deep, so the lookup win over a linear walk is still modest.`;
+    lookupContrastWatchEl.textContent = 'If the tree keeps staying shallow, the audience may learn more from order behavior than from asymptotic lookup claims.';
+    return;
+  }
+
+  const activeLookup =
+    state.active === 'stack'
+      ? 'only the top is O(1); arbitrary lookup is still linear'
+      : state.active === 'queue'
+        ? 'front access is O(1), but finding a deep item is still linear'
+        : 'pointer walking stays linear even when node order looks clean';
+  const bstPitch = `A BST built from ${n} values would target roughly ${bstLevels} visible lookup level${bstLevels === 1 ? '' : 's'} instead of scanning all ${n}.`;
+
+  lookupContrastTitleEl.textContent = `${structureInfo[state.active].title}: lookup stays mostly linear`;
+  lookupContrastDetailEl.textContent = `${activeLookup}. ${bstPitch}`;
+  lookupContrastWatchEl.textContent = n >= 6
+    ? 'If the demo is really about search posture, switch to BST after one linear lookup so the contrast feels earned.'
+    : 'With only a few values loaded, lookup differences are still small enough that order behavior may teach better than structure switching.';
+}
+
 function renderDemoReadiness() {
   if (!demoReadinessSummaryEl || !demoReadinessScoreEl || !demoReadinessListEl) return;
 
@@ -1246,6 +1295,7 @@ function renderVisualization() {
     renderOperationPlaybook();
     renderStructureSwitchboard();
     renderStressTest();
+    renderLookupContrast();
     renderInvariantCheck();
     return;
   }
@@ -1260,6 +1310,7 @@ function renderVisualization() {
     renderOperationPlaybook();
     renderStructureSwitchboard();
     renderStressTest();
+    renderLookupContrast();
     renderInvariantCheck();
     return;
   }
@@ -1274,6 +1325,7 @@ function renderVisualization() {
     renderOperationPlaybook();
     renderStructureSwitchboard();
     renderStressTest();
+    renderLookupContrast();
     renderInvariantCheck();
     persistState();
     return;
@@ -1289,6 +1341,7 @@ function renderVisualization() {
   renderStructureSwitchboard();
   renderStressTest();
   renderStudyHandoff();
+  renderLookupContrast();
   renderInvariantCheck();
   persistState();
 }
