@@ -66,6 +66,9 @@ const handoffWatchEl = document.getElementById('handoff-watch');
 const lookupContrastTitleEl = document.getElementById('lookup-contrast-title');
 const lookupContrastDetailEl = document.getElementById('lookup-contrast-detail');
 const lookupContrastWatchEl = document.getElementById('lookup-contrast-watch');
+const mutationCostTitleEl = document.getElementById('mutation-cost-title');
+const mutationCostDetailEl = document.getElementById('mutation-cost-detail');
+const mutationCostWatchEl = document.getElementById('mutation-cost-watch');
 const visualArea = document.getElementById('visual-area');
 const STORAGE_KEY = 'ds_playground_html_state_v1';
 
@@ -961,6 +964,50 @@ function renderDemoReadiness() {
     .join('');
 }
 
+function renderMutationCostBoard() {
+  if (!mutationCostTitleEl || !mutationCostDetailEl || !mutationCostWatchEl) return;
+
+  const values =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.active === 'linked'
+          ? state.linked.map((item) => item.value)
+          : collectBSTValues(state.bst);
+
+  if (!values.length) {
+    mutationCostTitleEl.textContent = 'Seed the structure first';
+    mutationCostDetailEl.textContent = 'Mutation cost only becomes interesting once there is visible depth, repeated values, or branch shape to disturb.';
+    mutationCostWatchEl.textContent = 'Load Sample or Load Challenge before using this board in a walkthrough.';
+    return;
+  }
+
+  if (state.active === 'bst') {
+    const height = bstHeight(state.bst);
+    const shape = bstShapeLabel(state.bst).toLowerCase();
+    mutationCostTitleEl.textContent = height >= 4 ? 'BST mutations are now shape-sensitive' : 'BST mutations are still cheap to narrate';
+    mutationCostDetailEl.textContent = `The next insert/delete will travel about ${height} level${height === 1 ? '' : 's'} through a ${shape} tree, so mutation cost now depends on branch shape rather than only node count.`;
+    mutationCostWatchEl.textContent = height >= 4
+      ? 'Search and rebalance are now part of the same story: every mutation is also changing future lookup posture.'
+      : 'Until the tree gets deeper, insertion cost is still easy to explain without leaning on asymptotics.';
+    return;
+  }
+
+  const exposedEdge =
+    state.active === 'stack'
+      ? `top ${values[values.length - 1]}`
+      : state.active === 'queue'
+        ? `front ${values[0]}`
+        : `head ${values[0]}`;
+  const duplicates = new Set(values).size !== values.length;
+  mutationCostTitleEl.textContent = `${structureInfo[state.active].title}: edge mutations are cheap`;
+  mutationCostDetailEl.textContent = `The next removal only disturbs ${exposedEdge}, while arbitrary lookup still walks ${values.length} visible value${values.length === 1 ? '' : 's'}.`;
+  mutationCostWatchEl.textContent = duplicates
+    ? 'Repeated values make mutation order easier to explain because position matters more than value uniqueness.'
+    : 'If you want mutation cost to feel sharper, add one repeated or outlier value before the next walkthrough.';
+}
+
 function renderInvariantCheck() {
   if (!invariantSummaryEl || !invariantListEl) return;
 
@@ -1296,6 +1343,7 @@ function renderVisualization() {
     renderStructureSwitchboard();
     renderStressTest();
     renderLookupContrast();
+    renderMutationCostBoard();
     renderInvariantCheck();
     return;
   }
@@ -1311,6 +1359,7 @@ function renderVisualization() {
     renderStructureSwitchboard();
     renderStressTest();
     renderLookupContrast();
+    renderMutationCostBoard();
     renderInvariantCheck();
     return;
   }
@@ -1326,6 +1375,7 @@ function renderVisualization() {
     renderStructureSwitchboard();
     renderStressTest();
     renderLookupContrast();
+    renderMutationCostBoard();
     renderInvariantCheck();
     persistState();
     return;
@@ -1342,6 +1392,7 @@ function renderVisualization() {
   renderStressTest();
   renderStudyHandoff();
   renderLookupContrast();
+  renderMutationCostBoard();
   renderInvariantCheck();
   persistState();
 }
