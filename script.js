@@ -72,6 +72,9 @@ const mutationCostWatchEl = document.getElementById('mutation-cost-watch');
 const historyPressureTitleEl = document.getElementById('history-pressure-title');
 const historyPressureDetailEl = document.getElementById('history-pressure-detail');
 const historyPressureWatchEl = document.getElementById('history-pressure-watch');
+const branchRehearsalTitleEl = document.getElementById('branch-rehearsal-title');
+const branchRehearsalDetailEl = document.getElementById('branch-rehearsal-detail');
+const branchRehearsalWatchEl = document.getElementById('branch-rehearsal-watch');
 const visualArea = document.getElementById('visual-area');
 const STORAGE_KEY = 'ds_playground_html_state_v1';
 
@@ -1085,6 +1088,34 @@ function renderHistoryPressureBoard() {
       : 'Redo depth is empty, which means the current branch has effectively become the new truth for the session.';
 }
 
+function renderBranchRehearsalBoard() {
+  if (!branchRehearsalTitleEl || !branchRehearsalDetailEl || !branchRehearsalWatchEl) return;
+
+  const undoDepth = historyStack.length;
+  const redoDepth = redoStack.length;
+  const latestLog = state.logs[0] || 'No actions logged yet.';
+  const alternateFuture = redoDepth >= 2;
+
+  if (!undoDepth && !redoDepth) {
+    branchRehearsalTitleEl.textContent = 'No branch rehearsal yet';
+    branchRehearsalDetailEl.textContent = 'Make a few edits, then undo one of them so the session holds both a current state and a believable alternate path.';
+    branchRehearsalWatchEl.textContent = 'Branch value appears once the viewer can compare what stayed true against what was abandoned.';
+    return;
+  }
+
+  branchRehearsalTitleEl.textContent = alternateFuture
+    ? `Alternate path is live: ${redoDepth} redo snapshot${redoDepth === 1 ? '' : 's'} available`
+    : `Branch pressure is light: ${undoDepth} undo snapshot${undoDepth === 1 ? '' : 's'} and ${redoDepth} redo snapshot${redoDepth === 1 ? '' : 's'}`;
+  branchRehearsalDetailEl.textContent = `Recent action head: ${latestLog}. The current ${structureInfo[state.active].title.toLowerCase()} walkthrough ${
+    alternateFuture
+      ? 'can now compare the chosen path against a realistic abandoned one.'
+      : 'still reads mostly as one forward storyline.'
+  }`;
+  branchRehearsalWatchEl.textContent = alternateFuture
+    ? 'Use redo depth to explain why interface state is more than the current nodes; it also carries discarded futures.'
+    : 'Undo exists, but the session needs one or two more reversals before branching becomes part of the story.';
+}
+
 function updateMetrics() {
   if (state.active === 'stack') {
     const values = state.stack.map((item) => item.value);
@@ -1377,6 +1408,7 @@ function renderVisualization() {
     renderMutationCostBoard();
     renderInvariantCheck();
     renderHistoryPressureBoard();
+    renderBranchRehearsalBoard();
     return;
   }
 
@@ -1394,6 +1426,7 @@ function renderVisualization() {
     renderMutationCostBoard();
     renderInvariantCheck();
     renderHistoryPressureBoard();
+    renderBranchRehearsalBoard();
     return;
   }
 
@@ -1411,6 +1444,7 @@ function renderVisualization() {
     renderMutationCostBoard();
     renderInvariantCheck();
     renderHistoryPressureBoard();
+    renderBranchRehearsalBoard();
     persistState();
     return;
   }
@@ -1429,6 +1463,7 @@ function renderVisualization() {
   renderMutationCostBoard();
   renderInvariantCheck();
   renderHistoryPressureBoard();
+  renderBranchRehearsalBoard();
   persistState();
 }
 
