@@ -69,6 +69,9 @@ const lookupContrastWatchEl = document.getElementById('lookup-contrast-watch');
 const mutationCostTitleEl = document.getElementById('mutation-cost-title');
 const mutationCostDetailEl = document.getElementById('mutation-cost-detail');
 const mutationCostWatchEl = document.getElementById('mutation-cost-watch');
+const historyPressureTitleEl = document.getElementById('history-pressure-title');
+const historyPressureDetailEl = document.getElementById('history-pressure-detail');
+const historyPressureWatchEl = document.getElementById('history-pressure-watch');
 const visualArea = document.getElementById('visual-area');
 const STORAGE_KEY = 'ds_playground_html_state_v1';
 
@@ -1054,6 +1057,34 @@ function renderInvariantCheck() {
   invariantListEl.innerHTML = rows.map((row) => `<li>${row}</li>`).join('');
 }
 
+function renderHistoryPressureBoard() {
+  if (!historyPressureTitleEl || !historyPressureDetailEl || !historyPressureWatchEl) return;
+
+  const totalSnapshots = historyStack.length + redoStack.length;
+  const recentLogHead = state.logs[0] || 'No operations logged yet.';
+
+  if (!totalSnapshots && state.logs.length <= 1) {
+    historyPressureTitleEl.textContent = 'Session history is still shallow';
+    historyPressureDetailEl.textContent = 'A few add/remove/search moves are enough to show why undo/redo matters more than a one-shot toy demo.';
+    historyPressureWatchEl.textContent = 'Once the history stack grows, the session becomes a state-coordination story instead of only a structure story.';
+    return;
+  }
+
+  const label =
+    totalSnapshots >= 10
+      ? 'Branchy session'
+      : totalSnapshots >= 5
+        ? 'Meaningful edit history'
+        : 'Light edit history';
+
+  historyPressureTitleEl.textContent = `${label}: ${historyStack.length} undo and ${redoStack.length} redo snapshot${totalSnapshots === 1 ? '' : 's'} in play.`;
+  historyPressureDetailEl.textContent = `Recent action head: ${recentLogHead}. The current ${structureInfo[state.active].title.toLowerCase()} session is carrying ${totalSnapshots} reversible state move${totalSnapshots === 1 ? '' : 's'}.`;
+  historyPressureWatchEl.textContent =
+    redoStack.length
+      ? 'Redo depth is non-zero, so the session now has competing future paths worth calling out in a walkthrough.'
+      : 'Redo depth is empty, which means the current branch has effectively become the new truth for the session.';
+}
+
 function updateMetrics() {
   if (state.active === 'stack') {
     const values = state.stack.map((item) => item.value);
@@ -1345,6 +1376,7 @@ function renderVisualization() {
     renderLookupContrast();
     renderMutationCostBoard();
     renderInvariantCheck();
+    renderHistoryPressureBoard();
     return;
   }
 
@@ -1361,6 +1393,7 @@ function renderVisualization() {
     renderLookupContrast();
     renderMutationCostBoard();
     renderInvariantCheck();
+    renderHistoryPressureBoard();
     return;
   }
 
@@ -1377,6 +1410,7 @@ function renderVisualization() {
     renderLookupContrast();
     renderMutationCostBoard();
     renderInvariantCheck();
+    renderHistoryPressureBoard();
     persistState();
     return;
   }
@@ -1394,6 +1428,7 @@ function renderVisualization() {
   renderLookupContrast();
   renderMutationCostBoard();
   renderInvariantCheck();
+  renderHistoryPressureBoard();
   persistState();
 }
 

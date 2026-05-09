@@ -37,6 +37,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Invariant check panel verifies the active structure's expected top/front/head/tree ordering behavior.
 - Stress test panel suggests the next add/remove/rebalance move that best exposes the active structure's behavior.
 - Study handoff panel turns the active state into a one-minute recap plus the next move worth showing in a walkthrough.
+- History pressure board reads the current undo/redo depth as a state-management story instead of only a structure snapshot.
 
 ## Technical Design
 
