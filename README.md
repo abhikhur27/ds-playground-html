@@ -39,6 +39,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Study handoff panel turns the active state into a one-minute recap plus the next move worth showing in a walkthrough.
 - History pressure board reads the current undo/redo depth as a state-management story instead of only a structure snapshot.
 - Branch rehearsal board detects when redo depth creates a meaningful alternate future worth calling out in the walkthrough.
+- Share payload board explains when the URL snapshot is still a quick share link and when JSON export is the better handoff artifact.
 
 ## Technical Design
 

@@ -75,6 +75,9 @@ const historyPressureWatchEl = document.getElementById('history-pressure-watch')
 const branchRehearsalTitleEl = document.getElementById('branch-rehearsal-title');
 const branchRehearsalDetailEl = document.getElementById('branch-rehearsal-detail');
 const branchRehearsalWatchEl = document.getElementById('branch-rehearsal-watch');
+const sharePayloadTitleEl = document.getElementById('share-payload-title');
+const sharePayloadDetailEl = document.getElementById('share-payload-detail');
+const sharePayloadWatchEl = document.getElementById('share-payload-watch');
 const visualArea = document.getElementById('visual-area');
 const STORAGE_KEY = 'ds_playground_html_state_v1';
 
@@ -1116,6 +1119,39 @@ function renderBranchRehearsalBoard() {
     : 'Undo exists, but the session needs one or two more reversals before branching becomes part of the story.';
 }
 
+function renderSharePayloadBoard() {
+  if (!sharePayloadTitleEl || !sharePayloadDetailEl || !sharePayloadWatchEl) return;
+
+  const snapshot = currentWorkspaceSnapshot();
+  const encoded = encodeWorkspaceSnapshot(snapshot);
+  const payloadLength = encoded.length;
+  const activeCount =
+    state.active === 'bst'
+      ? countBSTNodes(state.bst)
+      : state.active === 'stack'
+        ? state.stack.length
+        : state.active === 'queue'
+          ? state.queue.length
+          : state.linked.length;
+
+  if (!activeCount) {
+    sharePayloadTitleEl.textContent = 'Share link is still tiny';
+    sharePayloadDetailEl.textContent = 'Load or build a structure first. Right now the URL payload is mostly just the active tab and an empty workspace shell.';
+    sharePayloadWatchEl.textContent = 'Once values are visible, this board will explain when the quick URL handoff is still cleaner than JSON export.';
+    return;
+  }
+
+  sharePayloadTitleEl.textContent =
+    payloadLength >= 1200
+      ? 'Share link is carrying a full workspace handoff'
+      : 'Share link is still quick enough for lightweight handoffs';
+  sharePayloadDetailEl.textContent = `The current workspace compresses into ${payloadLength} URL-safe characters for ${activeCount} visible ${state.active === 'bst' ? 'tree node' : 'node'}${activeCount === 1 ? '' : 's'} in the ${structureInfo[state.active].title.toLowerCase()} lane.`;
+  sharePayloadWatchEl.textContent =
+    payloadLength >= 1200
+      ? 'The link is still valid, but larger sessions are now better paired with JSON export if you want a less brittle artifact.'
+      : 'For portfolio walkthroughs, the URL is still the fastest way to preserve both the active structure and the exact visible snapshot.';
+}
+
 function updateMetrics() {
   if (state.active === 'stack') {
     const values = state.stack.map((item) => item.value);
@@ -1409,6 +1445,7 @@ function renderVisualization() {
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
+    renderSharePayloadBoard();
     return;
   }
 
@@ -1427,6 +1464,7 @@ function renderVisualization() {
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
+    renderSharePayloadBoard();
     return;
   }
 
@@ -1445,6 +1483,7 @@ function renderVisualization() {
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
+    renderSharePayloadBoard();
     persistState();
     return;
   }
@@ -1464,6 +1503,7 @@ function renderVisualization() {
   renderInvariantCheck();
   renderHistoryPressureBoard();
   renderBranchRehearsalBoard();
+  renderSharePayloadBoard();
   persistState();
 }
 
