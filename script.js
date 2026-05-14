@@ -13,6 +13,7 @@ const undoBtn = document.getElementById('undo-btn');
 const redoBtn = document.getElementById('redo-btn');
 const shareStateBtn = document.getElementById('share-state-btn');
 const copyDemoBriefBtn = document.getElementById('copy-demo-brief-btn');
+const copyStudyHandoffBtn = document.getElementById('copy-study-handoff-btn');
 const exportStateBtn = document.getElementById('export-state-btn');
 const importStateBtn = document.getElementById('import-state-btn');
 const importStateFile = document.getElementById('import-state-file');
@@ -2054,6 +2055,19 @@ function buildDemoBrief() {
   ].join('\n');
 }
 
+function buildStudyHandoffBrief() {
+  return [
+    `${structureInfo[state.active].title} Study Handoff`,
+    '',
+    `${handoffTitleEl?.textContent || 'No handoff title yet.'}`,
+    `${handoffDetailEl?.textContent || 'No handoff detail yet.'}`,
+    `Watch-out: ${handoffWatchEl?.textContent || 'No handoff watch-out yet.'}`,
+    `Invariant summary: ${invariantSummaryEl?.textContent || 'No invariant summary yet.'}`,
+    `Recent log head: ${state.logs[0] || 'No operations logged yet.'}`,
+    `Current view: ${window.location.href}`,
+  ].join('\n');
+}
+
 function importState(event) {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -2136,6 +2150,15 @@ copyDemoBriefBtn?.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(buildDemoBrief());
     setStatus('Copied a demo brief with the current structure snapshot and operator playbook.');
+  } catch (error) {
+    setStatus('Clipboard copy failed in this environment.');
+  }
+});
+copyStudyHandoffBtn?.addEventListener('click', async () => {
+  syncUrlState();
+  try {
+    await navigator.clipboard.writeText(buildStudyHandoffBrief());
+    setStatus('Copied the current study handoff.');
   } catch (error) {
     setStatus('Clipboard copy failed in this environment.');
   }
