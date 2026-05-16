@@ -70,6 +70,9 @@ const lookupContrastWatchEl = document.getElementById('lookup-contrast-watch');
 const mutationCostTitleEl = document.getElementById('mutation-cost-title');
 const mutationCostDetailEl = document.getElementById('mutation-cost-detail');
 const mutationCostWatchEl = document.getElementById('mutation-cost-watch');
+const storageLensTitleEl = document.getElementById('storage-lens-title');
+const storageLensDetailEl = document.getElementById('storage-lens-detail');
+const storageLensWatchEl = document.getElementById('storage-lens-watch');
 const historyPressureTitleEl = document.getElementById('history-pressure-title');
 const historyPressureDetailEl = document.getElementById('history-pressure-detail');
 const historyPressureWatchEl = document.getElementById('history-pressure-watch');
@@ -1018,6 +1021,54 @@ function renderMutationCostBoard() {
     : 'If you want mutation cost to feel sharper, add one repeated or outlier value before the next walkthrough.';
 }
 
+function renderStorageLens() {
+  if (!storageLensTitleEl || !storageLensDetailEl || !storageLensWatchEl) return;
+
+  if (state.active === 'bst') {
+    const nodeCount = countBSTNodes(state.bst);
+    if (!nodeCount) {
+      storageLensTitleEl.textContent = 'Tree storage story is still empty';
+      storageLensDetailEl.textContent = 'Insert a few BST nodes first. The storage story becomes interesting once lookups depend on branch choice instead of one linear scan.';
+      storageLensWatchEl.textContent = 'Rebalance matters here because node order stays sorted while the access path length changes.';
+      return;
+    }
+
+    const height = bstHeight(state.bst);
+    const shape = bstShapeLabel(state.bst).toLowerCase();
+    storageLensTitleEl.textContent = height >= 5 ? 'Lookup cost is now branch-shaped' : 'Tree storage is still compact enough to narrate quickly';
+    storageLensDetailEl.textContent = `This BST stores ${nodeCount} node${nodeCount === 1 ? '' : 's'} as linked branches over ${height} level${height === 1 ? '' : 's'}. Search cost now depends on the branch path, not the full node count, and the current tree reads as ${shape}.`;
+    storageLensWatchEl.textContent = height >= 5
+      ? 'Use search plus rebalance together here: the storage story is really about path length and skew.'
+      : 'The tree is still shallow enough that the branch model is easy to explain without a heavy path-cost warning.';
+    return;
+  }
+
+  const values = state.active === 'stack' ? state.stack.map((item) => item.value) : state.active === 'queue' ? state.queue.map((item) => item.value) : state.linked.map((item) => item.value);
+  if (!values.length) {
+    storageLensTitleEl.textContent = 'Storage story is still empty';
+    storageLensDetailEl.textContent = 'Load or build a structure first. The storage lens becomes useful once values are visible enough to compare access direction against edit direction.';
+    storageLensWatchEl.textContent = 'Linear structures are easiest to contrast when head/front/top and tail are visibly different.';
+    return;
+  }
+
+  if (state.active === 'linked') {
+    const duplicateCount = values.length - new Set(values).size;
+    storageLensTitleEl.textContent = duplicateCount > 0 ? 'Pointer identity matters more than value uniqueness' : 'Linked storage is about node-to-node traversal';
+    storageLensDetailEl.textContent = `This linked list holds ${values.length} node${values.length === 1 ? '' : 's'} in explicit next-node order, so reaching the tail still means walking through every earlier pointer hop.`;
+    storageLensWatchEl.textContent = duplicateCount > 0
+      ? 'Repeated values help here because they show why node position still matters even when the payload looks the same.'
+      : 'Add one repeated value if you want the pointer-vs-value distinction to land more clearly in a walkthrough.';
+    return;
+  }
+
+  const edgeLabel = state.active === 'stack' ? 'top' : 'front';
+  storageLensTitleEl.textContent = `${structureInfo[state.active].title} storage is edge-first`;
+  storageLensDetailEl.textContent = `The current ${structureInfo[state.active].title.toLowerCase()} exposes ${values.length} visible value${values.length === 1 ? '' : 's'}, but the only cheap access point is the ${edgeLabel}. Everything else is visible for teaching, not for cheap arbitrary lookup.`;
+  storageLensWatchEl.textContent = state.active === 'stack'
+    ? 'This is the right contrast when you want to show why last-in data can be cheap to mutate but expensive to search.'
+    : 'Use this lens to explain why FIFO fairness comes from disciplined edge access, not from cheap random inspection.';
+}
+
 function renderInvariantCheck() {
   if (!invariantSummaryEl || !invariantListEl) return;
 
@@ -1443,6 +1494,7 @@ function renderVisualization() {
     renderStressTest();
     renderLookupContrast();
     renderMutationCostBoard();
+    renderStorageLens();
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
@@ -1462,6 +1514,7 @@ function renderVisualization() {
     renderStressTest();
     renderLookupContrast();
     renderMutationCostBoard();
+    renderStorageLens();
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
@@ -1481,6 +1534,7 @@ function renderVisualization() {
     renderStressTest();
     renderLookupContrast();
     renderMutationCostBoard();
+    renderStorageLens();
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
@@ -1501,6 +1555,7 @@ function renderVisualization() {
   renderStudyHandoff();
   renderLookupContrast();
   renderMutationCostBoard();
+  renderStorageLens();
   renderInvariantCheck();
   renderHistoryPressureBoard();
   renderBranchRehearsalBoard();
