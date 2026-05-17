@@ -38,6 +38,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Stress test panel suggests the next add/remove/rebalance move that best exposes the active structure's behavior.
 - Study handoff panel turns the active state into a one-minute recap plus the next move worth showing in a walkthrough.
 - Storage Lens explains how the current structure's visible shape maps to edge access, pointer traversal, or branch-path lookup cost.
+- Behavior promise lens translates the current structure into the caller-facing guarantee it is preserving: recency, arrival order, traversal order, or ordered lookup.
 - History pressure board reads the current undo/redo depth as a state-management story instead of only a structure snapshot.
 - Branch rehearsal board detects when redo depth creates a meaningful alternate future worth calling out in the walkthrough.
 - Share payload board explains when the URL snapshot is still a quick share link and when JSON export is the better handoff artifact.

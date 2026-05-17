@@ -73,6 +73,9 @@ const mutationCostWatchEl = document.getElementById('mutation-cost-watch');
 const storageLensTitleEl = document.getElementById('storage-lens-title');
 const storageLensDetailEl = document.getElementById('storage-lens-detail');
 const storageLensWatchEl = document.getElementById('storage-lens-watch');
+const promiseLensTitleEl = document.getElementById('promise-lens-title');
+const promiseLensDetailEl = document.getElementById('promise-lens-detail');
+const promiseLensWatchEl = document.getElementById('promise-lens-watch');
 const historyPressureTitleEl = document.getElementById('history-pressure-title');
 const historyPressureDetailEl = document.getElementById('history-pressure-detail');
 const historyPressureWatchEl = document.getElementById('history-pressure-watch');
@@ -1069,6 +1072,63 @@ function renderStorageLens() {
     : 'Use this lens to explain why FIFO fairness comes from disciplined edge access, not from cheap random inspection.';
 }
 
+function renderPromiseLens() {
+  if (!promiseLensTitleEl || !promiseLensDetailEl || !promiseLensWatchEl) return;
+
+  const values =
+    state.active === 'stack'
+      ? state.stack.map((item) => item.value)
+      : state.active === 'queue'
+        ? state.queue.map((item) => item.value)
+        : state.active === 'linked'
+          ? state.linked.map((item) => item.value)
+          : collectBSTValues(state.bst);
+
+  if (!values.length) {
+    promiseLensTitleEl.textContent = 'No promise is visible yet';
+    promiseLensDetailEl.textContent = 'Load or build a structure first. The promise lens only gets persuasive once there is enough shape to show what must stay true after the next edit.';
+    promiseLensWatchEl.textContent = 'This board is strongest when the same values could plausibly live in a different structure but would imply a different guarantee.';
+    return;
+  }
+
+  if (state.active === 'stack') {
+    promiseLensTitleEl.textContent = 'The stack is protecting recency';
+    promiseLensDetailEl.textContent = `The visible promise is that ${values[values.length - 1]} leaves first because newest work stays closest to the top. The structure is preserving reversal of arrival, not broad lookup convenience.`;
+    promiseLensWatchEl.textContent = values.length >= 5
+      ? 'Use a push-then-pop pair here so the promise feels behavioral: the latest frame disappears first and the earlier context resurfaces.'
+      : 'Add a few more values if you want the recency guarantee to land harder than a two-item toy example.';
+    return;
+  }
+
+  if (state.active === 'queue') {
+    promiseLensTitleEl.textContent = 'The queue is protecting fairness of arrival';
+    promiseLensDetailEl.textContent = `The visible promise is that ${values[0]} leaves before ${values[values.length - 1]} because arrival order outranks urgency or value magnitude. This structure is preserving service order.`;
+    promiseLensWatchEl.textContent = values.length >= 5
+      ? 'Dequeuing twice after one extra enqueue makes the fairness guarantee obvious without needing any abstract theory.'
+      : 'Grow the queue a bit more if you want FIFO pressure to read like a real line instead of a tiny demo.';
+    return;
+  }
+
+  if (state.active === 'linked') {
+    const duplicateCount = values.length - new Set(values).size;
+    promiseLensTitleEl.textContent = duplicateCount > 0 ? 'The list is protecting position, not just value identity' : 'The list is protecting explicit traversal order';
+    promiseLensDetailEl.textContent = duplicateCount > 0
+      ? `Repeated values make the promise easier to see: even when payloads match, node position still decides what the head reaches first and what later traversals must pass through.`
+      : `Each node stays meaningful because traversal order is explicit. The promise is not sorting or fairness; it is that the list keeps a deliberate walk path through ${values.length} linked nodes.`;
+    promiseLensWatchEl.textContent = duplicateCount > 0
+      ? 'This is the right moment to explain why identical values can still represent different roles once pointer order becomes the real contract.'
+      : 'Add one repeated value if you want the pointer-order promise to feel more concrete than a simple numeric sequence.';
+    return;
+  }
+
+  const height = bstHeight(state.bst);
+  promiseLensTitleEl.textContent = 'The BST is protecting ordered lookup decisions';
+  promiseLensDetailEl.textContent = `Every compare is promising a branch decision: smaller values go left, larger values go right, so lookup can skip whole subtrees instead of scanning every node. The current tree is ${height} level${height === 1 ? '' : 's'} deep.`;
+  promiseLensWatchEl.textContent = height >= 5
+    ? 'Search plus rebalance is the strongest demo here because it shows the lookup promise surviving while the path cost changes.'
+    : 'While the tree is still shallow, use one search to show the ordered-branch promise before the shape gets too trivial.';
+}
+
 function renderInvariantCheck() {
   if (!invariantSummaryEl || !invariantListEl) return;
 
@@ -1495,6 +1555,7 @@ function renderVisualization() {
     renderLookupContrast();
     renderMutationCostBoard();
     renderStorageLens();
+    renderPromiseLens();
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
@@ -1515,6 +1576,7 @@ function renderVisualization() {
     renderLookupContrast();
     renderMutationCostBoard();
     renderStorageLens();
+    renderPromiseLens();
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
@@ -1535,6 +1597,7 @@ function renderVisualization() {
     renderLookupContrast();
     renderMutationCostBoard();
     renderStorageLens();
+    renderPromiseLens();
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
@@ -1556,6 +1619,7 @@ function renderVisualization() {
   renderLookupContrast();
   renderMutationCostBoard();
   renderStorageLens();
+  renderPromiseLens();
   renderInvariantCheck();
   renderHistoryPressureBoard();
   renderBranchRehearsalBoard();
