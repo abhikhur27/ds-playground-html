@@ -76,6 +76,9 @@ const storageLensWatchEl = document.getElementById('storage-lens-watch');
 const promiseLensTitleEl = document.getElementById('promise-lens-title');
 const promiseLensDetailEl = document.getElementById('promise-lens-detail');
 const promiseLensWatchEl = document.getElementById('promise-lens-watch');
+const transferLensTitleEl = document.getElementById('transfer-lens-title');
+const transferLensDetailEl = document.getElementById('transfer-lens-detail');
+const transferLensWatchEl = document.getElementById('transfer-lens-watch');
 const historyPressureTitleEl = document.getElementById('history-pressure-title');
 const historyPressureDetailEl = document.getElementById('history-pressure-detail');
 const historyPressureWatchEl = document.getElementById('history-pressure-watch');
@@ -1129,6 +1132,56 @@ function renderPromiseLens() {
     : 'While the tree is still shallow, use one search to show the ordered-branch promise before the shape gets too trivial.';
 }
 
+function renderTransferCostLens() {
+  if (!transferLensTitleEl || !transferLensDetailEl || !transferLensWatchEl) return;
+
+  const linearValues = normalizeLinearItems(activeState[activeTab]).map((item) => item.value);
+  const activeCount = activeTab === 'bst' ? countBstNodes(activeState.bst) : linearValues.length;
+
+  if (!activeCount) {
+    transferLensTitleEl.textContent = 'No transfer cost is visible yet';
+    transferLensDetailEl.textContent = 'Load or build a structure first so the app can compare whether this workload should stay put or migrate to another lane.';
+    transferLensWatchEl.textContent = 'The transfer lens gets useful once a visible shape exists to preserve, rebuild, or intentionally discard.';
+    return;
+  }
+
+  if (activeTab === 'stack') {
+    transferLensTitleEl.textContent = activeCount >= 6 ? 'Stack is still cheap to transplant' : 'The stack is too light to justify a migration story';
+    transferLensDetailEl.textContent = activeCount >= 6
+      ? `All ${activeCount} visible values could move into a queue or linked list with almost no meaning loss, so the real question is whether you want recency or service order to lead the walkthrough.`
+      : 'Add a few more values before claiming that a lane switch would materially change the teaching story.';
+    transferLensWatchEl.textContent = 'Switch only if the audience is asking about fairness, not because the stack itself is failing.';
+    return;
+  }
+
+  if (activeTab === 'queue') {
+    transferLensTitleEl.textContent = activeCount >= 5 ? 'Queue migration would trade fairness for urgency' : 'The queue is still too small to make migration interesting';
+    transferLensDetailEl.textContent = activeCount >= 5
+      ? `Moving these ${activeCount} arrivals into a stack would be mechanically easy, but it would rewrite the service contract from oldest-first to newest-first.`
+      : 'Grow the service line first so a lane swap changes more than one or two visible items.';
+    transferLensWatchEl.textContent = 'Do not move this workload unless the story genuinely wants urgency, search, or pointer identity instead of fairness.';
+    return;
+  }
+
+  if (activeTab === 'linked') {
+    const duplicateCount = linearValues.length - new Set(linearValues).size;
+    transferLensTitleEl.textContent = duplicateCount > 0 ? 'The linked list would lose meaning if flattened carelessly' : 'This list can migrate if pointer identity is not the point';
+    transferLensDetailEl.textContent = duplicateCount > 0
+      ? `Duplicate payloads mean node position is doing real work here. A move into stack or queue would keep the values but collapse part of the pointer-order story.`
+      : `With ${activeCount} unique node${activeCount === 1 ? '' : 's'}, this workload can move into stack or queue form if you want to simplify the walkthrough without losing much meaning.`;
+    transferLensWatchEl.textContent = 'Once repeated values appear, the list earns its keep because position still matters even when payloads match.';
+    return;
+  }
+
+  const values = collectBSTValues(activeState.bst);
+  const height = bstHeight(activeState.bst);
+  transferLensTitleEl.textContent = height >= 4 ? 'BST migration would simplify the view but erase branch decisions' : 'The tree is still shallow enough that migration is optional';
+  transferLensDetailEl.textContent = height >= 4
+    ? `Flattening this tree would preserve the ${values.length} values but erase the branch-path decisions that currently make search and rebalance worth showing.`
+    : `The tree only reaches depth ${height}, so a linear structure could still tell most of the same story unless you want to foreground ordered lookup.`;
+  transferLensWatchEl.textContent = 'Keep the BST when path choice is the lesson. Migrate only if the branch structure is not buying enough clarity.';
+}
+
 function renderInvariantCheck() {
   if (!invariantSummaryEl || !invariantListEl) return;
 
@@ -1556,6 +1609,7 @@ function renderVisualization() {
     renderMutationCostBoard();
     renderStorageLens();
     renderPromiseLens();
+    renderTransferCostLens();
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
@@ -1577,6 +1631,7 @@ function renderVisualization() {
     renderMutationCostBoard();
     renderStorageLens();
     renderPromiseLens();
+    renderTransferCostLens();
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
@@ -1598,6 +1653,7 @@ function renderVisualization() {
     renderMutationCostBoard();
     renderStorageLens();
     renderPromiseLens();
+    renderTransferCostLens();
     renderInvariantCheck();
     renderHistoryPressureBoard();
     renderBranchRehearsalBoard();
@@ -1620,6 +1676,7 @@ function renderVisualization() {
   renderMutationCostBoard();
   renderStorageLens();
   renderPromiseLens();
+  renderTransferCostLens();
   renderInvariantCheck();
   renderHistoryPressureBoard();
   renderBranchRehearsalBoard();
