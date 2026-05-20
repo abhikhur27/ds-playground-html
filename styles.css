@@ -416,6 +416,12 @@ kbd {
   stroke: #166534;
 }
 
+/* Portfolio clarity mode: keep controls, metrics, snapshots, and visualization only. */
+.playbook-panel,
+.integrity-panel {
+  display: none;
+}
+
 @media (max-width: 980px) {
   .layout {
     grid-template-columns: 1fr;
