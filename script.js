@@ -14,6 +14,7 @@ const redoBtn = document.getElementById('redo-btn');
 const shareStateBtn = document.getElementById('share-state-btn');
 const copyDemoBriefBtn = document.getElementById('copy-demo-brief-btn');
 const copyStudyHandoffBtn = document.getElementById('copy-study-handoff-btn');
+const copySnapshotBriefBtn = document.getElementById('copy-snapshot-brief-btn');
 const exportStateBtn = document.getElementById('export-state-btn');
 const importStateBtn = document.getElementById('import-state-btn');
 const importStateFile = document.getElementById('import-state-file');
@@ -2244,6 +2245,22 @@ function buildStudyHandoffBrief() {
   ].join('\n');
 }
 
+function buildSnapshotBrief() {
+  return [
+    `${structureInfo[state.active].title} Snapshot Brief`,
+    '',
+    `Snapshot: ${snapshotSummaryEl?.textContent || 'No snapshot summary yet.'}`,
+    `Challenge objective: ${challengeObjectiveTitleEl?.textContent || 'No challenge objective yet.'}`,
+    challengeObjectiveDetailEl?.textContent || 'No challenge detail yet.',
+    `Invariant summary: ${invariantSummaryEl?.textContent || 'No invariant summary yet.'}`,
+    `Playbook: ${playbookTitleEl?.textContent || 'No playbook yet.'}`,
+    playbookDetailEl?.textContent || 'No playbook detail yet.',
+    `Stress test: ${stressTestTitleEl?.textContent || 'No stress test yet.'}`,
+    stressTestDetailEl?.textContent || 'No stress test detail yet.',
+    `Current view: ${window.location.href}`,
+  ].join('\n');
+}
+
 function importState(event) {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -2335,6 +2352,15 @@ copyStudyHandoffBtn?.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(buildStudyHandoffBrief());
     setStatus('Copied the current study handoff.');
+  } catch (error) {
+    setStatus('Clipboard copy failed in this environment.');
+  }
+});
+copySnapshotBriefBtn?.addEventListener('click', async () => {
+  syncUrlState();
+  try {
+    await navigator.clipboard.writeText(buildSnapshotBrief());
+    setStatus('Copied the current snapshot brief with readiness, invariant, and stress-test context.');
   } catch (error) {
     setStatus('Clipboard copy failed in this environment.');
   }
