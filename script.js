@@ -15,6 +15,7 @@ const shareStateBtn = document.getElementById('share-state-btn');
 const copyDemoBriefBtn = document.getElementById('copy-demo-brief-btn');
 const copyStudyHandoffBtn = document.getElementById('copy-study-handoff-btn');
 const copySnapshotBriefBtn = document.getElementById('copy-snapshot-brief-btn');
+const copyMigrationBriefBtn = document.getElementById('copy-migration-brief-btn');
 const exportStateBtn = document.getElementById('export-state-btn');
 const importStateBtn = document.getElementById('import-state-btn');
 const importStateFile = document.getElementById('import-state-file');
@@ -2261,6 +2262,22 @@ function buildSnapshotBrief() {
   ].join('\n');
 }
 
+function buildMigrationBrief() {
+  return [
+    `${structureInfo[state.active].title} Migration Brief`,
+    '',
+    `Snapshot: ${snapshotSummaryEl?.textContent || 'No snapshot summary yet.'}`,
+    `Switchboard: ${switchboardTitleEl?.textContent || 'No switchboard title yet.'}`,
+    switchboardDetailEl?.textContent || 'No switchboard detail yet.',
+    `Lookup contrast: ${lookupContrastTitleEl?.textContent || 'No lookup contrast yet.'}`,
+    lookupContrastDetailEl?.textContent || 'No lookup contrast detail yet.',
+    `Transfer lens: ${transferLensTitleEl?.textContent || 'No transfer lens yet.'}`,
+    transferLensDetailEl?.textContent || 'No transfer detail yet.',
+    `Transfer watch: ${transferLensWatchEl?.textContent || 'No transfer watch yet.'}`,
+    `Current view: ${window.location.href}`,
+  ].join('\n');
+}
+
 function importState(event) {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -2361,6 +2378,15 @@ copySnapshotBriefBtn?.addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText(buildSnapshotBrief());
     setStatus('Copied the current snapshot brief with readiness, invariant, and stress-test context.');
+  } catch (error) {
+    setStatus('Clipboard copy failed in this environment.');
+  }
+});
+copyMigrationBriefBtn?.addEventListener('click', async () => {
+  syncUrlState();
+  try {
+    await navigator.clipboard.writeText(buildMigrationBrief());
+    setStatus('Copied the current migration brief with switchboard, lookup, and transfer-cost context.');
   } catch (error) {
     setStatus('Clipboard copy failed in this environment.');
   }

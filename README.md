@@ -17,6 +17,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Workspace import/export as JSON snapshots.
 - Workspace import/export now preserves linked-list state alongside stack, queue, and BST data.
 - Copy Demo Brief converts the active structure snapshot, operator playbook, and share link into a clipboard-ready walkthrough note.
+- Copy Migration Brief packages the current switchboard, lookup contrast, and transfer-cost posture into one handoff note.
 - Responsive layout and keyboard-friendly controls.
 - Shortcut-first walkthrough support:
   - `1-4` switch active structures
@@ -82,6 +83,12 @@ Open `http://localhost:8000`.
 - No build tooling required.
 - Static HTML/CSS/JS only.
 - Works directly from repository root.
+
+## Portfolio Positioning
+
+- Honest label: static browser data-structures demo.
+- Best use: quick walkthroughs of stack, queue, linked-list, and BST behavior without framework overhead.
+- Public quality rule: preserve the fast teaching loop before adding more explanatory surfaces.
 
 ## Future Improvements
 
