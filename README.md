@@ -90,6 +90,11 @@ Open `http://localhost:8000`.
 - Best use: quick walkthroughs of stack, queue, linked-list, and BST behavior without framework overhead.
 - Public quality rule: preserve the fast teaching loop before adding more explanatory surfaces.
 
+## Relationship To The React Archive
+
+- This repo is the primary public deployment because it is faster to load, easier to host on GitHub Pages, and better aligned with the current portfolio direction.
+- The archived React repo is still useful for state-orchestration study, but public walkthroughs should usually start here and only point to React when implementation tradeoffs matter.
+
 ## Future Improvements
 
 - Add heap and graph modules.
