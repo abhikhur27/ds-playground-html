@@ -78,6 +78,12 @@ Open `http://localhost:8000`.
 4. Copy the demo brief so the walkthrough has a portable artifact.
 5. Use the Stress Test panel to stage a more revealing follow-up move after the first walkthrough.
 
+## Reproducibility Workflow
+
+- `Copy Share Link` is the fastest path when the current structure state should reopen exactly in the browser.
+- `Copy Snapshot Brief` is the better handoff when the state alone is not enough and you need the current invariant, payload, and lens summary preserved too.
+- `Export State` is the safer path when the structure is dense enough that a URL should not be the only artifact.
+
 ## GitHub Pages Compatibility
 
 - No build tooling required.
