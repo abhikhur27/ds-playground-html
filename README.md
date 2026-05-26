@@ -106,3 +106,12 @@ Open `http://localhost:8000`.
 - Add heap and graph modules.
 - Add side-by-side complexity hints per structure.
 - Add queue/linked-list search variants beyond remove-head.
+
+## Fast QA Loop
+
+Use this quick QA loop before publishing:
+
+1. Load each structure once via `Load Sample`.
+2. Trigger one add/remove/search action per structure.
+3. Verify undo/redo works after a bulk import.
+4. Export state and import it back; confirm counters and operation log remain consistent.
