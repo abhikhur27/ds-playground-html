@@ -210,7 +210,11 @@ function decodeWorkspaceSnapshot(raw) {
       // Backward compatibility for previously shared legacy URLs.
       const normalized = raw.replace(/-/g, '+').replace(/_/g, '/');
       const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-      const json = decodeURIComponent(escape(atob(padded)));
+      const binary = atob(padded);
+      const percentEncoded = Array.from(binary)
+        .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
+        .join('');
+      const json = decodeURIComponent(percentEncoded);
       return JSON.parse(json);
     } catch {
       return null;
