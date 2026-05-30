@@ -116,3 +116,9 @@ Use this quick QA loop before publishing:
 2. Trigger one add/remove/search action per structure.
 3. Verify undo/redo works after a bulk import.
 4. Export state and import it back; confirm counters and operation log remain consistent.
+
+## Quick Verification Command
+
+Run this syntax check before sharing updates:
+- node --check script.js
+
