@@ -38,6 +38,12 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Structure switchboard tells you when the current workload would actually teach better as a different data structure.
 - Invariant check panel verifies the active structure's expected top/front/head/tree ordering behavior.
 - Stress test panel suggests the next add/remove/rebalance move that best exposes the active structure's behavior.
+
+## Fast demo flow
+
+1. Load or build a small workload.
+2. Use the switchboard and complexity guide to explain why the active structure fits or fails.
+3. Copy the demo brief or shareable URL when you want a reproducible walkthrough state.
 - Study handoff panel turns the active state into a one-minute recap plus the next move worth showing in a walkthrough.
 - Storage Lens explains how the current structure's visible shape maps to edge access, pointer traversal, or branch-path lookup cost.
 - Behavior promise lens translates the current structure into the caller-facing guarantee it is preserving: recency, arrival order, traversal order, or ordered lookup.
