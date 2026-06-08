@@ -39,6 +39,12 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Invariant check panel verifies the active structure's expected top/front/head/tree ordering behavior.
 - Stress test panel suggests the next add/remove/rebalance move that best exposes the active structure's behavior.
 
+## Demo Flow
+
+1. Load a challenge scenario.
+2. Switch structures to compare order behavior under the same data.
+3. Rebalance the BST and copy the demo brief once the lookup-path contrast is clear.
+
 ## Fast demo flow
 
 1. Load or build a small workload.
