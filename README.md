@@ -1,4 +1,4 @@
-# Data Structures Playground (Vanilla)
+# Data Structures Browser Demo
 
 Framework-free data structures visualizer for stack, queue, linked list, and binary search tree operations.
 
