@@ -2454,6 +2454,16 @@ document.addEventListener('keydown', (event) => {
   if (event.key.toLowerCase() === 'y') {
     event.preventDefault();
     handleRedo();
+    return;
+  }
+
+  if (event.key.toLowerCase() === 'b') {
+    event.preventDefault();
+    syncUrlState();
+    navigator.clipboard
+      .writeText(buildSnapshotBrief())
+      .then(() => setStatus('Copied the current snapshot brief.'))
+      .catch(() => setStatus('Clipboard copy failed in this environment.'));
   }
 });
 
