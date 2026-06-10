@@ -27,6 +27,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
   - `Z` / `Y` undo or redo
 - Undo and redo history for structural edits.
 - BST rebalance control rebuilds the current tree from its in-order values to show how shape affects lookup behavior.
+- BST rebalance now emits a before/after height and average-depth report so the payoff is explicit instead of implied.
 - Search now works across stack, queue, and linked-list modes in addition to BST path search.
 - Active-structure complexity guide for add/remove/lookup operations.
 - Active-structure metric cards now switch between linear snapshots (top/front/head, range, duplicates) and BST diagnostics.

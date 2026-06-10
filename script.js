@@ -143,6 +143,7 @@ let searchInProgress = false;
 const historyStack = [];
 const redoStack = [];
 let traversalModeIndex = 0;
+let lastRebalanceReport = null;
 const traversalModes = ['In-order', 'Pre-order', 'Post-order', 'Level-order'];
 
 function syncNodeCounter() {
@@ -365,10 +366,22 @@ function bstHeight(node) {
   return 1 + Math.max(bstHeight(node.left), bstHeight(node.right));
 }
 
+function countBSTNodes(node) {
+  if (!node) return 0;
+  return 1 + countBSTNodes(node.left) + countBSTNodes(node.right);
+}
+
+const countBstNodes = countBSTNodes;
+
 function bstLeafCount(node) {
   if (!node) return 0;
   if (!node.left && !node.right) return 1;
   return bstLeafCount(node.left) + bstLeafCount(node.right);
+}
+
+function sumBstDepths(node, depth = 1) {
+  if (!node) return 0;
+  return depth + sumBstDepths(node.left, depth + 1) + sumBstDepths(node.right, depth + 1);
 }
 
 function bstMin(node) {
@@ -1833,6 +1846,29 @@ function computeTraversal(modeName) {
   return levelorder(state.bst);
 }
 
+function buildRebalanceReport(beforeRoot, afterRoot) {
+  const beforeHeight = bstHeight(beforeRoot);
+  const afterHeight = bstHeight(afterRoot);
+  const beforeCount = countBSTNodes(beforeRoot);
+  const beforeAverageDepth = beforeCount ? sumBstDepths(beforeRoot) / beforeCount : 0;
+  const afterAverageDepth = beforeCount ? sumBstDepths(afterRoot) / beforeCount : 0;
+  const beforeValues = collectBSTValues(beforeRoot);
+  const afterValues = collectBSTValues(afterRoot);
+  return {
+    nodeCount: beforeCount,
+    beforeHeight,
+    afterHeight,
+    beforeAverageDepth,
+    afterAverageDepth,
+    heightDrop: Math.max(0, beforeHeight - afterHeight),
+    averageDepthDrop: Math.max(0, beforeAverageDepth - afterAverageDepth),
+    beforeShape: bstShapeLabel(beforeRoot),
+    afterShape: bstShapeLabel(afterRoot),
+    beforeSignature: beforeValues.join(','),
+    afterSignature: afterValues.join(','),
+  };
+}
+
 function handleTraverse() {
   if (state.active !== 'bst') return;
 
@@ -1864,11 +1900,19 @@ function handleRebalance() {
 
   clearHighlights();
   captureSnapshot();
+  const beforeTree = cloneTree(state.bst);
   state.bst = buildBalancedBST(values);
-  setTraversalOutput('');
+  lastRebalanceReport = buildRebalanceReport(beforeTree, state.bst);
+  setTraversalOutput(
+    `Rebalance report: height ${lastRebalanceReport.beforeHeight} -> ${lastRebalanceReport.afterHeight} | avg depth ${lastRebalanceReport.beforeAverageDepth.toFixed(2)} -> ${lastRebalanceReport.afterAverageDepth.toFixed(2)}`
+  );
   renderVisualization();
-  setStatus(`Rebuilt the BST into a more balanced shape across ${values.length} nodes.`);
-  addLog('BST rebalanced from in-order values');
+  setStatus(
+    `Rebalanced ${lastRebalanceReport.nodeCount} BST nodes from ${lastRebalanceReport.beforeShape.toLowerCase()} to ${lastRebalanceReport.afterShape.toLowerCase()} shape.`
+  );
+  addLog(
+    `BST rebalanced (${lastRebalanceReport.beforeHeight} -> ${lastRebalanceReport.afterHeight} levels, avg depth ${lastRebalanceReport.beforeAverageDepth.toFixed(2)} -> ${lastRebalanceReport.afterAverageDepth.toFixed(2)})`
+  );
 }
 
 function handleAdd() {
@@ -2233,6 +2277,10 @@ function buildDemoBrief() {
   const stressTest = buildStressTest();
   const snapshot = snapshotSummaryEl?.textContent || 'Load or edit a structure to inspect its current posture.';
   const chips = Array.from(snapshotChipsEl?.querySelectorAll('.snapshot-chip') || []).map((chip) => chip.textContent).join(' | ');
+  const rebalanceLine =
+    state.active === 'bst' && lastRebalanceReport && lastRebalanceReport.afterSignature === collectBSTValues(state.bst).join(',')
+      ? `Rebalance delta: height ${lastRebalanceReport.beforeHeight} -> ${lastRebalanceReport.afterHeight} | avg depth ${lastRebalanceReport.beforeAverageDepth.toFixed(2)} -> ${lastRebalanceReport.afterAverageDepth.toFixed(2)}`
+      : null;
   return [
     `${structureInfo[state.active].title} Demo Brief`,
     '',
@@ -2244,6 +2292,7 @@ function buildDemoBrief() {
     `Stress test: ${stressTest.title}`,
     stressTest.detail,
     `Stress-test watch-out: ${stressTest.watch}`,
+    ...(rebalanceLine ? [rebalanceLine] : []),
     `Recent log head: ${state.logs[0] || 'No operations logged yet.'}`,
     `Share link: ${window.location.href}`,
   ].join('\n');
