@@ -13,6 +13,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
   - insert
   - delete
   - path-animated search
+- Stack, queue, and linked-list search now animate the scan path instead of jumping straight to the answer.
 - Operation log with timestamped actions.
 - Workspace import/export as JSON snapshots.
 - Workspace import/export now preserves linked-list state alongside stack, queue, and BST data.

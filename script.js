@@ -1784,6 +1784,29 @@ async function animateSearch(path, foundId) {
   searchInProgress = false;
 }
 
+async function animateLinearSearch(items, target) {
+  searchInProgress = true;
+  state.activeNodeId = null;
+  state.foundNodeId = null;
+
+  let foundItem = null;
+  for (const item of items) {
+    state.activeNodeId = item.id;
+    renderVisualization();
+    await new Promise((resolve) => setTimeout(resolve, 280));
+    if (item.value === target) {
+      foundItem = item;
+      break;
+    }
+  }
+
+  state.activeNodeId = null;
+  state.foundNodeId = foundItem?.id || null;
+  renderVisualization();
+  searchInProgress = false;
+  return foundItem;
+}
+
 function clearHighlights() {
   state.activeNodeId = null;
   state.foundNodeId = null;
@@ -2050,6 +2073,8 @@ function handleLoadSequence() {
 }
 
 async function handleSearch() {
+  if (searchInProgress) return;
+
   const value = parseInputValue();
   if (state.active !== 'bst') {
     if (value === null) {
@@ -2063,22 +2088,20 @@ async function handleSearch() {
       return;
     }
 
-    const foundItem = values.find((item) => item.value === value);
     clearHighlights();
+    setStatus(`Scanning ${structureInfo[state.active].title.toLowerCase()} for ${value}...`);
+    const foundItem = await animateLinearSearch(values, value);
     if (foundItem) {
-      state.activeNodeId = foundItem.id;
-      state.foundNodeId = foundItem.id;
-      setStatus(`Found ${value} in ${structureInfo[state.active].title.toLowerCase()}.`);
-      addLog(`${state.active} search hit ${value}`);
+      const position = values.findIndex((item) => item.id === foundItem.id);
+      setStatus(`Found ${value} in ${structureInfo[state.active].title.toLowerCase()} at position ${position + 1}.`);
+      addLog(`${state.active} search hit ${value} at position ${position + 1}`);
     } else {
       setStatus(`${value} not found in ${structureInfo[state.active].title.toLowerCase()}.`);
       addLog(`${state.active} search miss ${value}`);
     }
-    renderVisualization();
     return;
   }
 
-  if (searchInProgress) return;
   if (value === null) {
     setStatus('Enter a valid integer to search in BST.');
     return;
