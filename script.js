@@ -6,6 +6,8 @@ const removeBtn = document.getElementById('remove-btn');
 const loadSequenceBtn = document.getElementById('load-sequence-btn');
 const searchBtn = document.getElementById('search-btn');
 const traverseBtn = document.getElementById('traverse-btn');
+const traversalModeWrap = document.getElementById('traversal-mode-wrap');
+const traversalModeSelect = document.getElementById('traversal-mode');
 const rebalanceBtn = document.getElementById('rebalance-btn');
 const reverseBtn = document.getElementById('reverse-btn');
 const clearBtn = document.getElementById('clear-btn');
@@ -142,7 +144,6 @@ let nodeCounter = 0;
 let searchInProgress = false;
 const historyStack = [];
 const redoStack = [];
-let traversalModeIndex = 0;
 let lastRebalanceReport = null;
 const traversalModes = ['In-order', 'Pre-order', 'Post-order', 'Level-order'];
 
@@ -172,6 +173,7 @@ function persistState() {
       linked: state.linked,
       bst: state.bst,
       logs: state.logs,
+      traversalMode: traversalModeSelect?.value || traversalModes[0],
     })
   );
 }
@@ -183,6 +185,7 @@ function currentWorkspaceSnapshot() {
     queue: state.queue,
     linked: state.linked,
     bst: state.bst,
+    traversalMode: traversalModeSelect?.value || traversalModes[0],
   };
 }
 
@@ -243,6 +246,9 @@ function hydrateFromUrlState() {
     state.queue = Array.isArray(parsed.queue) ? normalizeLinearItems(parsed.queue) : [];
     state.linked = Array.isArray(parsed.linked) ? normalizeLinearItems(parsed.linked) : [];
     state.bst = parsed.bst || null;
+    if (traversalModeSelect && traversalModes.includes(parsed.traversalMode)) {
+      traversalModeSelect.value = parsed.traversalMode;
+    }
     syncNodeCounter();
     return true;
   } catch (error) {
@@ -261,6 +267,9 @@ function restoreState() {
     state.linked = Array.isArray(parsed.linked) ? normalizeLinearItems(parsed.linked) : [];
     state.bst = parsed.bst || null;
     state.logs = Array.isArray(parsed.logs) ? parsed.logs.slice(0, 16) : [];
+    if (traversalModeSelect && traversalModes.includes(parsed.traversalMode)) {
+      traversalModeSelect.value = parsed.traversalMode;
+    }
     logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
     syncNodeCounter();
     return true;
@@ -1729,6 +1738,7 @@ function updateControlLabels() {
   const isBST = state.active === 'bst';
   searchBtn.classList.toggle('hidden', false);
   traverseBtn.classList.toggle('hidden', !isBST);
+  traversalModeWrap?.classList.toggle('hidden', !isBST);
   rebalanceBtn.classList.toggle('hidden', !isBST);
   reverseBtn.classList.toggle('hidden', isBST);
   reverseBtn.textContent =
@@ -1901,12 +1911,14 @@ function handleTraverse() {
     return;
   }
 
-  const mode = traversalModes[traversalModeIndex];
+  const mode = traversalModeSelect?.value && traversalModes.includes(traversalModeSelect.value)
+    ? traversalModeSelect.value
+    : traversalModes[0];
   const sequence = computeTraversal(mode);
   setTraversalOutput(`${mode}: ${sequence.join(' -> ')}`);
   setStatus(`Traversal computed (${mode}).`);
   addLog(`BST traversal ${mode.toLowerCase()}`);
-  traversalModeIndex = (traversalModeIndex + 1) % traversalModes.length;
+  persistState();
 }
 
 function handleRebalance() {
@@ -2154,7 +2166,7 @@ function handleSampleLoad() {
   captureSnapshot();
   clearHighlights();
   setTraversalOutput('');
-  traversalModeIndex = 0;
+  if (traversalModeSelect) traversalModeSelect.value = traversalModes[0];
 
   if (state.active === 'stack') {
     state.stack = [14, 27, 33, 41, 52].map((value) => ({ id: nextNodeId(), value }));
@@ -2186,7 +2198,7 @@ function handleChallengeLoad() {
   captureSnapshot();
   clearHighlights();
   setTraversalOutput('');
-  traversalModeIndex = 0;
+  if (traversalModeSelect) traversalModeSelect.value = traversalModes[0];
 
   if (state.active === 'stack') {
     state.stack = [13, 21, 21, 34, 55, 89].map((value) => ({ id: nextNodeId(), value }));
@@ -2380,10 +2392,14 @@ function importState(event) {
       state.linked = Array.isArray(parsed.linked) ? normalizeLinearItems(parsed.linked) : [];
       state.bst = parsed.bst || null;
       state.logs = Array.isArray(parsed.logs) ? parsed.logs.slice(0, 16) : [];
+      if (traversalModeSelect && traversalModes.includes(parsed.traversalMode)) {
+        traversalModeSelect.value = parsed.traversalMode;
+      } else if (traversalModeSelect) {
+        traversalModeSelect.value = traversalModes[0];
+      }
       logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
       clearHighlights();
       setTraversalOutput('');
-      traversalModeIndex = 0;
       syncNodeCounter();
       setActiveTab(state.active);
       renderVisualization();
@@ -2400,7 +2416,9 @@ function importState(event) {
 
 function setActiveTab(tab) {
   state.active = tab;
-  traversalModeIndex = 0;
+  if (traversalModeSelect && state.active !== 'bst') {
+    traversalModeSelect.value = traversalModes[0];
+  }
   updateControlLabels();
   clearHighlights();
   renderVisualization();
@@ -2428,6 +2446,11 @@ removeBtn.addEventListener('click', handleRemove);
 loadSequenceBtn.addEventListener('click', handleLoadSequence);
 searchBtn.addEventListener('click', handleSearch);
 traverseBtn.addEventListener('click', handleTraverse);
+traversalModeSelect?.addEventListener('change', () => {
+  setTraversalOutput('');
+  persistState();
+  setStatus(`BST traversal mode set to ${traversalModeSelect.value}.`);
+});
 rebalanceBtn.addEventListener('click', handleRebalance);
 reverseBtn.addEventListener('click', handleReverse);
 clearBtn.addEventListener('click', handleClear);

@@ -69,6 +69,15 @@
         <button id="sample-btn" type="button">Load Sample</button>
         <button id="challenge-btn" type="button">Load Challenge</button>
       </div>
+      <label id="traversal-mode-wrap" class="hidden">
+        BST Traversal
+        <select id="traversal-mode">
+          <option value="In-order">In-order</option>
+          <option value="Pre-order">Pre-order</option>
+          <option value="Post-order">Post-order</option>
+          <option value="Level-order">Level-order</option>
+        </select>
+      </label>
       <input id="import-state-file" type="file" accept="application/json" class="hidden" />
 
       <p id="status" class="status" aria-live="polite">Stack selected.</p>

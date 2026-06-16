@@ -13,6 +13,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
   - insert
   - delete
   - path-animated search
+- BST traversal now uses an explicit mode picker for in-order, pre-order, post-order, and level-order runs instead of cycling a hidden mode.
 - Stack, queue, and linked-list search now animate the scan path instead of jumping straight to the answer.
 - Operation log with timestamped actions.
 - Workspace import/export as JSON snapshots.
@@ -45,7 +46,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 
 1. Load a challenge scenario.
 2. Switch structures to compare order behavior under the same data.
-3. Rebalance the BST and copy the demo brief once the lookup-path contrast is clear.
+3. Choose a traversal mode, run it, then rebalance the BST once the lookup-path contrast is clear.
 
 ## Fast demo flow
 
