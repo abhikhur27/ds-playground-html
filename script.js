@@ -38,6 +38,9 @@ const metricLeavesEl = document.getElementById('metric-leaves');
 const metricLeavesLabelEl = document.getElementById('metric-leaves-label');
 const metricBalanceEl = document.getElementById('metric-balance');
 const metricBalanceLabelEl = document.getElementById('metric-balance-label');
+const searchInsightTitleEl = document.getElementById('search-insight-title');
+const searchInsightDetailEl = document.getElementById('search-insight-detail');
+const searchInsightWatchEl = document.getElementById('search-insight-watch');
 const complexityAddEl = document.getElementById('complexity-add');
 const complexityRemoveEl = document.getElementById('complexity-remove');
 const complexityLookupEl = document.getElementById('complexity-lookup');
@@ -145,6 +148,7 @@ let searchInProgress = false;
 const historyStack = [];
 const redoStack = [];
 let lastRebalanceReport = null;
+let lastSearchInsight = null;
 const traversalModes = ['In-order', 'Pre-order', 'Post-order', 'Level-order'];
 
 function syncNodeCounter() {
@@ -1520,6 +1524,90 @@ function buildSearchPath(root, target) {
   return { path, foundId: null };
 }
 
+function findBstNeighborReport(root, target) {
+  let current = root;
+  let depth = 0;
+  let predecessor = null;
+  let successor = null;
+
+  while (current) {
+    depth += 1;
+    if (target === current.value) {
+      let left = current.left;
+      while (left) {
+        predecessor = left.value;
+        left = left.right;
+      }
+      let right = current.right;
+      while (right) {
+        successor = right.value;
+        right = right.left;
+      }
+      return { found: true, depth, predecessor, successor };
+    }
+
+    if (target < current.value) {
+      successor = current.value;
+      current = current.left;
+    } else {
+      predecessor = current.value;
+      current = current.right;
+    }
+  }
+
+  return { found: false, depth, predecessor, successor };
+}
+
+function resetSearchInsight() {
+  lastSearchInsight = null;
+}
+
+function renderSearchInsightBoard() {
+  if (!searchInsightTitleEl || !searchInsightDetailEl || !searchInsightWatchEl) return;
+
+  if (!lastSearchInsight || lastSearchInsight.structure !== state.active) {
+    if (state.active === 'bst') {
+      searchInsightTitleEl.textContent = 'Run a BST search to inspect depth and nearest neighbors.';
+      searchInsightDetailEl.textContent = 'The app will report path depth plus predecessor and successor context for the searched value.';
+      searchInsightWatchEl.textContent = 'Nearest-neighbor context matters when the tree misses: it shows where a new value would branch in.';
+      return;
+    }
+
+    searchInsightTitleEl.textContent = `Run a ${structureInfo[state.active].title.toLowerCase()} search to inspect access cost.`;
+    searchInsightDetailEl.textContent = 'The app will report how far the scan had to walk before it found the target or proved it absent.';
+    searchInsightWatchEl.textContent = 'Linear structure lookups are traversal stories, so scan depth matters as much as the yes/no result.';
+    return;
+  }
+
+  if (lastSearchInsight.structure === 'bst') {
+    const { value, depth, found, predecessor, successor } = lastSearchInsight;
+    searchInsightTitleEl.textContent = found
+      ? `BST found ${value} after ${depth} level${depth === 1 ? '' : 's'} of branching.`
+      : `BST miss for ${value} ended after ${depth} decision${depth === 1 ? '' : 's'}.`;
+    searchInsightDetailEl.textContent = found
+      ? `Neighbor read: predecessor ${predecessor ?? 'none'} | successor ${successor ?? 'none'}. This shows the local ordering context around the matched node.`
+      : `Insertion neighborhood: predecessor ${predecessor ?? 'none'} | successor ${successor ?? 'none'}. The miss still shows where the next branch would land.`;
+    searchInsightWatchEl.textContent = found
+      ? 'Use the depth to talk about lookup cost; use the neighbor pair to explain why ordered trees carry more meaning than a raw found/not-found result.'
+      : 'A clean miss is still useful evidence: it reveals where the tree would route the new value and how much branch work it already spent getting there.';
+    return;
+  }
+
+  const { value, found, position, scanned, structure } = lastSearchInsight;
+  searchInsightTitleEl.textContent = found
+    ? `${structureInfo[structure].title} found ${value} at position ${position}.`
+    : `${structureInfo[structure].title} missed ${value} after scanning ${scanned} visible node${scanned === 1 ? '' : 's'}.`;
+  searchInsightDetailEl.textContent = found
+    ? `Lookup cost: ${scanned} scan step${scanned === 1 ? '' : 's'} to reach position ${position}. The structure still had to walk through each earlier node in order.`
+    : `Lookup cost: every visible node was checked (${scanned} scan step${scanned === 1 ? '' : 's'}) before the miss became certain.`;
+  searchInsightWatchEl.textContent =
+    structure === 'stack'
+      ? 'Use this to contrast cheap top access with expensive deeper search: LIFO visibility does not make arbitrary lookup cheap.'
+      : structure === 'queue'
+        ? 'FIFO keeps service order honest, but it still pays full traversal cost when you search past the front.'
+        : 'Linked-list lookup cost is positional all the way down, which is why middle-node access is still the main teaching point.';
+}
+
 function renderStack() {
   if (!state.stack.length) {
     visualArea.innerHTML = '<p class="empty">Stack is empty. Push a value to begin.</p>';
@@ -1644,6 +1732,7 @@ function renderVisualization() {
     renderDemoReadiness();
     renderOperationPlaybook();
     renderStructureSwitchboard();
+    renderSearchInsightBoard();
     renderStressTest();
     renderLookupContrast();
     renderMutationCostBoard();
@@ -1666,6 +1755,7 @@ function renderVisualization() {
     renderDemoReadiness();
     renderOperationPlaybook();
     renderStructureSwitchboard();
+    renderSearchInsightBoard();
     renderStressTest();
     renderLookupContrast();
     renderMutationCostBoard();
@@ -1688,6 +1778,7 @@ function renderVisualization() {
     renderDemoReadiness();
     renderOperationPlaybook();
     renderStructureSwitchboard();
+    renderSearchInsightBoard();
     renderStressTest();
     renderLookupContrast();
     renderMutationCostBoard();
@@ -1710,6 +1801,7 @@ function renderVisualization() {
   renderDemoReadiness();
   renderOperationPlaybook();
   renderStructureSwitchboard();
+  renderSearchInsightBoard();
   renderStressTest();
   renderStudyHandoff();
   renderLookupContrast();
@@ -1761,6 +1853,7 @@ function handleReverse() {
   }
 
   captureSnapshot();
+  resetSearchInsight();
   if (state.active === 'stack') {
     state.stack = [...state.stack].reverse();
     addLog('Stack reversed');
@@ -1935,6 +2028,7 @@ function handleRebalance() {
 
   clearHighlights();
   captureSnapshot();
+  resetSearchInsight();
   const beforeTree = cloneTree(state.bst);
   state.bst = buildBalancedBST(values);
   lastRebalanceReport = buildRebalanceReport(beforeTree, state.bst);
@@ -1959,6 +2053,7 @@ function handleAdd() {
 
   clearHighlights();
   captureSnapshot();
+  resetSearchInsight();
 
   if (state.active === 'stack') {
     state.stack.push({ id: nextNodeId(), value });
@@ -1992,6 +2087,7 @@ function handleAdd() {
 
 function handleRemove() {
   captureSnapshot();
+  resetSearchInsight();
 
   if (state.active === 'stack') {
     if (!state.stack.length) {
@@ -2054,6 +2150,7 @@ function handleLoadSequence() {
   clearHighlights();
   captureSnapshot();
   setTraversalOutput('');
+  resetSearchInsight();
 
   if (state.active === 'stack') {
     state.stack = [...state.stack, ...values.map((value) => ({ id: nextNodeId(), value }))];
@@ -2105,12 +2202,27 @@ async function handleSearch() {
     const foundItem = await animateLinearSearch(values, value);
     if (foundItem) {
       const position = values.findIndex((item) => item.id === foundItem.id);
+      lastSearchInsight = {
+        structure: state.active,
+        value,
+        found: true,
+        position: position + 1,
+        scanned: position + 1,
+      };
       setStatus(`Found ${value} in ${structureInfo[state.active].title.toLowerCase()} at position ${position + 1}.`);
       addLog(`${state.active} search hit ${value} at position ${position + 1}`);
     } else {
+      lastSearchInsight = {
+        structure: state.active,
+        value,
+        found: false,
+        position: null,
+        scanned: values.length,
+      };
       setStatus(`${value} not found in ${structureInfo[state.active].title.toLowerCase()}.`);
       addLog(`${state.active} search miss ${value}`);
     }
+    renderSearchInsightBoard();
     return;
   }
 
@@ -2125,15 +2237,25 @@ async function handleSearch() {
   }
 
   const { path, foundId } = buildSearchPath(state.bst, value);
+  const neighborReport = findBstNeighborReport(state.bst, value);
   setStatus(`Searching for ${value}...`);
   addLog(`BST search ${value}`);
   await animateSearch(path, foundId);
+  lastSearchInsight = {
+    structure: 'bst',
+    value,
+    found: Boolean(foundId),
+    depth: neighborReport.depth,
+    predecessor: neighborReport.predecessor,
+    successor: neighborReport.successor,
+  };
 
   if (foundId) {
     setStatus(`Found ${value} in BST.`);
   } else {
     setStatus(`${value} not found in BST.`);
   }
+  renderSearchInsightBoard();
 }
 
 function handleClear() {
@@ -2141,18 +2263,22 @@ function handleClear() {
 
   if (state.active === 'stack') {
     state.stack = [];
+    resetSearchInsight();
     setStatus('Stack cleared.');
     addLog('Stack cleared');
   } else if (state.active === 'queue') {
     state.queue = [];
+    resetSearchInsight();
     setStatus('Queue cleared.');
     addLog('Queue cleared');
   } else if (state.active === 'linked') {
     state.linked = [];
+    resetSearchInsight();
     setStatus('Linked list cleared.');
     addLog('Linked list cleared');
   } else {
     state.bst = null;
+    resetSearchInsight();
     setTraversalOutput('');
     setStatus('BST cleared.');
     addLog('BST cleared');
@@ -2170,19 +2296,23 @@ function handleSampleLoad() {
 
   if (state.active === 'stack') {
     state.stack = [14, 27, 33, 41, 52].map((value) => ({ id: nextNodeId(), value }));
+    resetSearchInsight();
     setStatus('Loaded sample stack.');
     addLog('Stack sample loaded');
   } else if (state.active === 'queue') {
     state.queue = [11, 18, 29, 36, 45].map((value) => ({ id: nextNodeId(), value }));
+    resetSearchInsight();
     setStatus('Loaded sample queue.');
     addLog('Queue sample loaded');
   } else if (state.active === 'linked') {
     state.linked = [5, 12, 19, 28, 34].map((value) => ({ id: nextNodeId(), value }));
+    resetSearchInsight();
     setStatus('Loaded sample linked list.');
     addLog('Linked list sample loaded');
   } else {
     const sample = [40, 24, 62, 15, 31, 51, 78, 27];
     state.bst = null;
+    resetSearchInsight();
     sample.forEach((value) => {
       const result = insertBST(state.bst, value);
       state.bst = result.node;
@@ -2202,19 +2332,23 @@ function handleChallengeLoad() {
 
   if (state.active === 'stack') {
     state.stack = [13, 21, 21, 34, 55, 89].map((value) => ({ id: nextNodeId(), value }));
+    resetSearchInsight();
     setStatus('Loaded challenge stack with repeated top pressure.');
     addLog('Stack challenge loaded');
   } else if (state.active === 'queue') {
     state.queue = [42, 18, 18, 7, 63, 90].map((value) => ({ id: nextNodeId(), value }));
+    resetSearchInsight();
     setStatus('Loaded challenge queue with mixed arrivals and repeated values.');
     addLog('Queue challenge loaded');
   } else if (state.active === 'linked') {
     state.linked = [11, 14, 14, 23, 31, 31].map((value) => ({ id: nextNodeId(), value }));
+    resetSearchInsight();
     setStatus('Loaded challenge linked list with repeated nodes for head-removal demos.');
     addLog('Linked list challenge loaded');
   } else {
     const sample = [52, 24, 16, 12, 19, 68, 61, 74, 79];
     state.bst = null;
+    resetSearchInsight();
     sample.forEach((value) => {
       const result = insertBST(state.bst, value);
       state.bst = result.node;

@@ -14,6 +14,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
   - delete
   - path-animated search
 - BST traversal now uses an explicit mode picker for in-order, pre-order, post-order, and level-order runs instead of cycling a hidden mode.
+- Search Insight board now turns the last lookup into a concrete scan-depth or predecessor/successor read so search cost is visible, not implied.
 - Stack, queue, and linked-list search now animate the scan path instead of jumping straight to the answer.
 - Operation log with timestamped actions.
 - Workspace import/export as JSON snapshots.
@@ -91,7 +92,8 @@ Open `http://localhost:8000`.
 1. Load a sample dataset.
 2. Switch between stack, queue, linked list, and BST to show shared controls.
 3. Run search or traversal on the active structure.
-4. Copy the demo brief so the walkthrough has a portable artifact.
+4. Read the Search Insight board so the lookup result includes path cost instead of only a hit/miss outcome.
+5. Copy the demo brief so the walkthrough has a portable artifact.
 5. Use the Stress Test panel to stage a more revealing follow-up move after the first walkthrough.
 
 ## Reproducibility Workflow
