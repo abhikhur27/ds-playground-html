@@ -2424,6 +2424,7 @@ function exportLog() {
 function exportState() {
   const payload = {
     active: state.active,
+    traversalMode: traversalModeSelect?.value || traversalModes[0],
     stack: state.stack,
     queue: state.queue,
     linked: state.linked,
