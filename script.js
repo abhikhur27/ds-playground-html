@@ -2430,6 +2430,11 @@ function exportState() {
     linked: state.linked,
     bst: state.bst,
     logs: state.logs,
+    traversalOutput: traversalOutputEl?.textContent || '',
+    historyStack: historyStack.slice(-24),
+    redoStack: redoStack.slice(-24),
+    lastRebalanceReport,
+    lastSearchInsight,
   };
 
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -2527,6 +2532,16 @@ function importState(event) {
       state.linked = Array.isArray(parsed.linked) ? normalizeLinearItems(parsed.linked) : [];
       state.bst = parsed.bst || null;
       state.logs = Array.isArray(parsed.logs) ? parsed.logs.slice(0, 16) : [];
+      historyStack.length = 0;
+      if (Array.isArray(parsed.historyStack)) {
+        historyStack.push(...parsed.historyStack.slice(-24));
+      }
+      redoStack.length = 0;
+      if (Array.isArray(parsed.redoStack)) {
+        redoStack.push(...parsed.redoStack.slice(-24));
+      }
+      lastRebalanceReport = parsed.lastRebalanceReport && typeof parsed.lastRebalanceReport === 'object' ? parsed.lastRebalanceReport : null;
+      lastSearchInsight = parsed.lastSearchInsight && typeof parsed.lastSearchInsight === 'object' ? parsed.lastSearchInsight : null;
       if (traversalModeSelect && traversalModes.includes(parsed.traversalMode)) {
         traversalModeSelect.value = parsed.traversalMode;
       } else if (traversalModeSelect) {
@@ -2534,7 +2549,7 @@ function importState(event) {
       }
       logEl.innerHTML = state.logs.map((entry) => `<li>${entry}</li>`).join('');
       clearHighlights();
-      setTraversalOutput('');
+      setTraversalOutput(typeof parsed.traversalOutput === 'string' ? parsed.traversalOutput : '');
       syncNodeCounter();
       setActiveTab(state.active);
       renderVisualization();
