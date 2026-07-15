@@ -21,6 +21,11 @@ const copyMigrationBriefBtn = document.getElementById('copy-migration-brief-btn'
 const exportStateBtn = document.getElementById('export-state-btn');
 const importStateBtn = document.getElementById('import-state-btn');
 const importStateFile = document.getElementById('import-state-file');
+const saveShelfBtn = document.getElementById('save-shelf-btn');
+const loadShelfBtn = document.getElementById('load-shelf-btn');
+const deleteShelfBtn = document.getElementById('delete-shelf-btn');
+const workspaceShelfSelect = document.getElementById('workspace-shelf-select');
+const workspaceShelfSummary = document.getElementById('workspace-shelf-summary');
 const exportLogBtn = document.getElementById('export-log-btn');
 const sampleBtn = document.getElementById('sample-btn');
 const challengeBtn = document.getElementById('challenge-btn');
@@ -150,6 +155,7 @@ const redoStack = [];
 let lastRebalanceReport = null;
 let lastSearchInsight = null;
 const traversalModes = ['In-order', 'Pre-order', 'Post-order', 'Level-order'];
+let workspaceShelf = [];
 
 function syncNodeCounter() {
   const values = [];
@@ -178,6 +184,7 @@ function persistState() {
       bst: state.bst,
       logs: state.logs,
       traversalMode: traversalModeSelect?.value || traversalModes[0],
+      workspaceShelf,
     })
   );
 }
@@ -271,6 +278,7 @@ function restoreState() {
     state.linked = Array.isArray(parsed.linked) ? normalizeLinearItems(parsed.linked) : [];
     state.bst = parsed.bst || null;
     state.logs = Array.isArray(parsed.logs) ? parsed.logs.slice(0, 16) : [];
+    workspaceShelf = Array.isArray(parsed.workspaceShelf) ? parsed.workspaceShelf.slice(0, 6) : [];
     if (traversalModeSelect && traversalModes.includes(parsed.traversalMode)) {
       traversalModeSelect.value = parsed.traversalMode;
     }
@@ -301,6 +309,81 @@ function normalizeLinearItems(items = []) {
       value: Number(item),
     };
   });
+}
+
+function applyWorkspaceSnapshot(snapshot) {
+  state.active = snapshot.active || 'stack';
+  state.stack = Array.isArray(snapshot.stack) ? normalizeLinearItems(snapshot.stack) : [];
+  state.queue = Array.isArray(snapshot.queue) ? normalizeLinearItems(snapshot.queue) : [];
+  state.linked = Array.isArray(snapshot.linked) ? normalizeLinearItems(snapshot.linked) : [];
+  state.bst = snapshot.bst || null;
+  state.activeNodeId = null;
+  state.foundNodeId = null;
+  if (traversalModeSelect && traversalModes.includes(snapshot.traversalMode)) {
+    traversalModeSelect.value = snapshot.traversalMode;
+  }
+  syncNodeCounter();
+}
+
+function buildShelfLabel(snapshot) {
+  if (snapshot.active === 'bst') {
+    return `BST (${countBstNodes(snapshot.bst)} nodes, ${snapshot.traversalMode || traversalModes[0]})`;
+  }
+
+  const items = Array.isArray(snapshot[snapshot.active]) ? snapshot[snapshot.active] : [];
+  return `${structureInfo[snapshot.active].title.replace(' Visualization', '')} (${items.length} items)`;
+}
+
+function renderWorkspaceShelf() {
+  if (!workspaceShelfSelect || !workspaceShelfSummary) return;
+  workspaceShelfSelect.innerHTML = ['<option value="">Choose a saved workspace...</option>']
+    .concat(workspaceShelf.map((entry, index) => `<option value="${index}">${entry.label}</option>`))
+    .join('');
+  workspaceShelfSummary.textContent = workspaceShelf.length
+    ? `${workspaceShelf.length} saved workspace${workspaceShelf.length === 1 ? '' : 's'} ready for repeatable walkthroughs.`
+    : 'Save one or two strong structures to build a reusable local demo shelf.';
+}
+
+function saveCurrentWorkspaceToShelf() {
+  const snapshot = JSON.parse(JSON.stringify(currentWorkspaceSnapshot()));
+  const serialized = JSON.stringify(snapshot);
+  const label = buildShelfLabel(snapshot);
+  workspaceShelf = workspaceShelf.filter((entry) => entry.serialized !== serialized);
+  workspaceShelf.unshift({ label, serialized, snapshot });
+  workspaceShelf = workspaceShelf.slice(0, 6);
+  persistState();
+  renderWorkspaceShelf();
+  if (workspaceShelfSelect) workspaceShelfSelect.value = '0';
+  setStatus(`Saved ${label} to the local demo shelf.`);
+}
+
+function loadWorkspaceFromShelf() {
+  const index = Number(workspaceShelfSelect?.value);
+  if (!Number.isInteger(index) || !workspaceShelf[index]) {
+    setStatus('Choose a saved workspace before loading it from the shelf.');
+    return;
+  }
+
+  pushHistory();
+  applyWorkspaceSnapshot(workspaceShelf[index].snapshot);
+  setActiveTab(state.active);
+  renderVisualization();
+  persistState();
+  setStatus(`Loaded ${workspaceShelf[index].label} from the local demo shelf.`);
+}
+
+function deleteWorkspaceFromShelf() {
+  const index = Number(workspaceShelfSelect?.value);
+  if (!Number.isInteger(index) || !workspaceShelf[index]) {
+    setStatus('Choose a saved workspace before deleting it from the shelf.');
+    return;
+  }
+
+  const [removed] = workspaceShelf.splice(index, 1);
+  persistState();
+  renderWorkspaceShelf();
+  if (workspaceShelfSelect) workspaceShelfSelect.value = '';
+  setStatus(`Deleted ${removed.label} from the local demo shelf.`);
 }
 
 function setStatus(message) {
@@ -2654,6 +2737,9 @@ copyMigrationBriefBtn?.addEventListener('click', async () => {
 });
 importStateBtn.addEventListener('click', () => importStateFile.click());
 importStateFile.addEventListener('change', importState);
+saveShelfBtn?.addEventListener('click', saveCurrentWorkspaceToShelf);
+loadShelfBtn?.addEventListener('click', loadWorkspaceFromShelf);
+deleteShelfBtn?.addEventListener('click', deleteWorkspaceFromShelf);
 exportLogBtn.addEventListener('click', exportLog);
 sampleBtn.addEventListener('click', handleSampleLoad);
 challengeBtn.addEventListener('click', handleChallengeLoad);
@@ -2717,6 +2803,7 @@ const restoredFromUrl = hydrateFromUrlState();
 const restored = restoredFromUrl || restoreState();
 setActiveTab(state.active);
 renderVisualization();
+renderWorkspaceShelf();
 if (restoredFromUrl) {
   setStatus('Loaded workspace snapshot from the URL.');
 } else if (restored) {

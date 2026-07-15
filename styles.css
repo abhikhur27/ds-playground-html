@@ -164,6 +164,10 @@ button:hover {
   line-height: 1.5;
 }
 
+#workspace-shelf-summary {
+  margin-top: 0.35rem;
+}
+
 kbd {
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 0.35rem;

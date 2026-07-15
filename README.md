@@ -18,6 +18,7 @@ Framework-free data structures visualizer for stack, queue, linked list, and bin
 - Stack, queue, and linked-list search now animate the scan path instead of jumping straight to the answer.
 - Operation log with timestamped actions.
 - Workspace import/export as JSON snapshots.
+- Local demo shelf saves the strongest structure states so repeat walkthroughs do not depend on one browser session.
 - Workspace export now preserves the active BST traversal mode so imported review files reopen with the same traversal lens.
 - Workspace import/export now preserves linked-list state alongside stack, queue, and BST data.
 - Legacy share URLs now decode through UTF-8-safe logic without deprecated browser APIs.

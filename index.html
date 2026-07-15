@@ -65,6 +65,9 @@
         <button id="copy-migration-brief-btn" type="button">Copy Migration Brief</button>
         <button id="export-state-btn" type="button">Export State</button>
         <button id="import-state-btn" type="button">Import State</button>
+        <button id="save-shelf-btn" type="button">Save To Shelf</button>
+        <button id="load-shelf-btn" type="button">Load From Shelf</button>
+        <button id="delete-shelf-btn" type="button">Delete Shelf Entry</button>
         <button id="export-log-btn" type="button">Export Log</button>
         <button id="sample-btn" type="button">Load Sample</button>
         <button id="challenge-btn" type="button">Load Challenge</button>
@@ -78,11 +81,18 @@
           <option value="Level-order">Level-order</option>
         </select>
       </label>
+      <label>
+        Saved Shelf
+        <select id="workspace-shelf-select">
+          <option value="">Choose a saved workspace...</option>
+        </select>
+      </label>
       <input id="import-state-file" type="file" accept="application/json" class="hidden" />
 
       <p id="status" class="status" aria-live="polite">Stack selected.</p>
       <p class="shortcut-note">Shortcuts: <kbd>1-4</kbd> switch structures, <kbd>Enter</kbd> add from Value, <kbd>Shift + Enter</kbd> load Bulk Sequence, <kbd>5</kbd> load challenge, <kbd>Z</kbd>/<kbd>Y</kbd> undo or redo.</p>
       <p id="traversal-output" class="status mono"></p>
+      <p id="workspace-shelf-summary" class="status">Save one or two strong structures to build a reusable local demo shelf.</p>
 
       <div class="button-grid">
         <article class="metric-card">
